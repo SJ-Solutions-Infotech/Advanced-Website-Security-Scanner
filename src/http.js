@@ -1,18 +1,9 @@
-// Thin fetch wrapper: timeouts, timing, body size cap, manual redirects,
-// and a per-host requests-per-second throttle so the scanned site is never flooded.
-import { HostThrottle } from './security/ratelimit.js';
-
-export const UA = 'Mozilla/5.0 (compatible; SJ-WebScan/1.1; +https://sjweb4u.com)';
+// Thin fetch wrapper: timeouts, timing, body size cap, manual redirects
+export const UA = 'Mozilla/5.0 (compatible; SJ-WebScan/1.0; +https://sjweb4u.com)';
 const MAX_BODY = 3 * 1024 * 1024;
-
-export const DEFAULT_RPS = Number(process.env.WEBSCAN_RPS || 10);
-const throttle = new HostThrottle(DEFAULT_RPS);
-export function setThrottle(rps) { throttle.setRate(rps || DEFAULT_RPS); }
-export function getThrottle() { return throttle.rps; }
 
 export async function request(url, opts = {}) {
   const { method = 'GET', timeout = 15000, redirect = 'follow', headers = {}, body, maxBody = MAX_BODY, readBody = true } = opts;
-  try { await throttle.wait(new URL(url).host); } catch {}
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeout);
   const t0 = performance.now();

@@ -1,0 +1,368 @@
+{
+  "scanner": "SJ WebScan",
+  "version": "1.0.0",
+  "scannedAt": "2026-11-10T20:30:40.959Z",
+  "durationMs": 16414,
+  "target": {
+    "input": "https://sjweb4u.com/",
+    "url": "https://sjweb4u.com/",
+    "finalUrl": "https://sjweb4u.com/",
+    "host": "sjweb4u.com",
+    "domain": "sjweb4u.com",
+    "redirectChain": []
+  },
+  "technologies": [
+    "Bootstrap",
+    "Cloudflare"
+  ],
+  "score": {
+    "overall": 87,
+    "grade": "B",
+    "security": 82,
+    "health": 97
+  },
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 3,
+    "low": 6,
+    "pass": 20,
+    "warn": 7,
+    "fail": 2,
+    "info": 8,
+    "total": 37,
+    "tools": {
+      "ran": 0,
+      "notInstalled": 0,
+      "skipped": 0,
+      "errors": 0
+    }
+  },
+  "findings": [
+    {
+      "category": "Security headers",
+      "id": "hdr.csp",
+      "title": "Content-Security-Policy",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "Missing",
+      "fix": "Define a CSP, e.g. default-src 'self'; script-src 'self' <trusted CDNs>; object-src 'none'; frame-ancestors 'self'. Start with Report-Only to tune it."
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.xfo",
+      "title": "Clickjacking protection",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "No X-Frame-Options or frame-ancestors",
+      "fix": "Add X-Frame-Options: SAMEORIGIN (or CSP frame-ancestors 'self')."
+    },
+    {
+      "id": "tls.legacy",
+      "category": "SSL/TLS",
+      "title": "Legacy TLS 1.0/1.1 disabled",
+      "status": "warn",
+      "severity": "medium",
+      "detail": "Server still accepts TLSv1.1",
+      "fix": "Disable TLS 1.0 and 1.1 (nginx: ssl_protocols TLSv1.2 TLSv1.3; Apache: SSLProtocol -all +TLSv1.2 +TLSv1.3)."
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.referrer-policy",
+      "title": "Referrer-Policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: Referrer-Policy: strict-origin-when-cross-origin"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.permissions-policy",
+      "title": "Permissions-Policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: Permissions-Policy: camera=(), microphone=(), geolocation=()"
+    },
+    {
+      "id": "dns.dmarc",
+      "category": "DNS & Email",
+      "title": "DMARC policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "v=DMARC1; p=none; rua=mailto:1d524d1aeb304bb4b8e8590e6695881f@dmarc-reports.cloudflare.net,mailto:rua@dmarc.brevo.com",
+      "fix": "Move from p=none to p=quarantine/reject once reports look clean."
+    },
+    {
+      "id": "perf.ttfb",
+      "category": "Performance",
+      "title": "Time to first byte (avg of 3)",
+      "status": "warn",
+      "severity": "low",
+      "detail": "1020 ms (samples: 1114, 1397, 549 ms) — measured from the scanner's location",
+      "fix": "Enable full-page caching (LiteSpeed Cache / WP Rocket / Laravel response cache), OPcache, a CDN, and check slow DB queries."
+    },
+    {
+      "id": "perf.size",
+      "category": "Performance",
+      "title": "HTML document size",
+      "status": "warn",
+      "severity": "low",
+      "detail": "225 KB (uncompressed)",
+      "fix": "Reduce inline CSS/JS/SVG, page-builder bloat and inline base64 images."
+    },
+    {
+      "id": "links.broken",
+      "category": "Health",
+      "title": "Broken links (homepage)",
+      "status": "warn",
+      "severity": "low",
+      "detail": "7/58 broken: https://in.linkedin.com/company/sj-solution-infotech → 403 | https://sjweb4u.com/service.php → 404 | https://sjweb4u.com/web-designing.php → 404 | https://sjweb4u.com/web-development.php → 404 | https://sjweb4u.com/about-us.php → 404 | https://sjweb4u.com/contact-us.php → 404 | https://www.facebook.com/sjwebsolutions/target= → 404"
+    },
+    {
+      "id": "tech.stack",
+      "category": "Technology",
+      "title": "Detected technologies",
+      "status": "info",
+      "severity": "info",
+      "detail": "Bootstrap, Cloudflare"
+    },
+    {
+      "id": "tls.details",
+      "category": "SSL/TLS",
+      "title": "Certificate details",
+      "status": "info",
+      "severity": "info",
+      "detail": "CN=sjweb4u.com; SAN=DNS:sjweb4u.com, DNS:*.sjweb4u.com; key=256 bits; serial=6F2C53C4BC135A22131EA95E963BF55E"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.cross-origin-opener-policy",
+      "title": "Cross-Origin-Opener-Policy",
+      "status": "info",
+      "severity": "info",
+      "detail": "Missing",
+      "fix": "Optional: Cross-Origin-Opener-Policy: same-origin"
+    },
+    {
+      "id": "dns.records",
+      "category": "DNS & Email",
+      "title": "DNS records",
+      "status": "info",
+      "severity": "info",
+      "detail": "A: 104.21.55.117, 172.67.147.253 | AAAA: 2606:4700:3037::ac43:93fd, 2606:4700:3031::6815:3775 | NS: ignacio.ns.cloudflare.com, malavika.ns.cloudflare.com | MX: 0 _dc-mx.016ec794b22b.sjweb4u.com"
+    },
+    {
+      "id": "dns.caa",
+      "category": "DNS & Email",
+      "title": "CAA record",
+      "status": "info",
+      "severity": "info",
+      "detail": "No CAA — any CA may issue certificates",
+      "fix": "Optional: add CAA records (e.g. 0 issue \"letsencrypt.org\") to restrict who can issue certificates."
+    },
+    {
+      "id": "dns.txt",
+      "category": "DNS & Email",
+      "title": "TXT verification records (OSINT)",
+      "status": "info",
+      "severity": "info",
+      "detail": "Services: google-site-verification"
+    },
+    {
+      "id": "securitytxt",
+      "category": "Best practice",
+      "title": "security.txt",
+      "status": "info",
+      "severity": "info",
+      "detail": "Not found",
+      "fix": "Publish /.well-known/security.txt with a Contact: line (RFC 9116)."
+    },
+    {
+      "id": "perf.requests",
+      "category": "Performance",
+      "title": "Page resources",
+      "status": "info",
+      "severity": "info",
+      "detail": "19 scripts, 11 stylesheets, 57 images"
+    },
+    {
+      "id": "https.redirect",
+      "category": "SSL/TLS",
+      "title": "HTTP → HTTPS redirect",
+      "status": "pass",
+      "severity": "low",
+      "detail": "HTTP 301 → https://sjweb4u.com/"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.hsts",
+      "title": "Strict-Transport-Security (HSTS)",
+      "status": "pass",
+      "severity": "low",
+      "detail": "max-age=15552000; preload"
+    },
+    {
+      "id": "tls.trusted",
+      "category": "SSL/TLS",
+      "title": "Certificate trusted",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Issued by Google Trust Services"
+    },
+    {
+      "id": "tls.expiry",
+      "category": "SSL/TLS",
+      "title": "Certificate expiry",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Expires in 78 days (2027-01-28)"
+    },
+    {
+      "id": "tls.protocol",
+      "category": "SSL/TLS",
+      "title": "Negotiated protocol",
+      "status": "pass",
+      "severity": "info",
+      "detail": "TLSv1.3 / TLS_AES_256_GCM_SHA384"
+    },
+    {
+      "id": "tls.http2",
+      "category": "Performance",
+      "title": "HTTP/2 support",
+      "status": "pass",
+      "severity": "info",
+      "detail": "ALPN negotiated h2"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.x-content-type-options",
+      "title": "X-Content-Type-Options",
+      "status": "pass",
+      "severity": "info",
+      "detail": "nosniff"
+    },
+    {
+      "id": "info.headers",
+      "category": "Information disclosure",
+      "title": "Server / framework version disclosure",
+      "status": "pass",
+      "severity": "info",
+      "detail": "server: cloudflare"
+    },
+    {
+      "id": "dns.spf",
+      "category": "DNS & Email",
+      "title": "SPF (email spoofing protection)",
+      "status": "pass",
+      "severity": "info",
+      "detail": "v=spf1 +a +mx +ip4:190.92.174.37 include:spf.mysecurecloudhost.com ~all"
+    },
+    {
+      "id": "expose.none",
+      "category": "Exposed files",
+      "title": "Sensitive file exposure",
+      "status": "pass",
+      "severity": "info",
+      "detail": "45 common sensitive paths checked, none exposed"
+    },
+    {
+      "id": "dirlisting",
+      "category": "Exposed files",
+      "title": "Directory listing",
+      "status": "pass",
+      "severity": "info",
+      "detail": "No directory listing on common folders"
+    },
+    {
+      "id": "robots",
+      "category": "Health",
+      "title": "robots.txt",
+      "status": "pass",
+      "severity": "info",
+      "detail": "16 Disallow rule(s); sensitive-looking paths revealed: /admin/, /admin, /configuration/, /admin/, /admin/, /admin/, /admin/, /admin/"
+    },
+    {
+      "id": "sitemap",
+      "category": "Health",
+      "title": "XML sitemap",
+      "status": "pass",
+      "severity": "info",
+      "detail": "https://sjweb4u.com/sitemap.xml (45 entries)"
+    },
+    {
+      "id": "perf.status",
+      "category": "Health",
+      "title": "Homepage status",
+      "status": "pass",
+      "severity": "info",
+      "detail": "HTTP 200 at https://sjweb4u.com/"
+    },
+    {
+      "id": "perf.load",
+      "category": "Performance",
+      "title": "HTML download time",
+      "status": "pass",
+      "severity": "info",
+      "detail": "1208 ms"
+    },
+    {
+      "id": "perf.compression",
+      "category": "Performance",
+      "title": "Text compression",
+      "status": "pass",
+      "severity": "info",
+      "detail": "content-encoding: br"
+    },
+    {
+      "id": "perf.cache",
+      "category": "Performance",
+      "title": "Static asset caching",
+      "status": "pass",
+      "severity": "info",
+      "detail": "All 8 sampled assets cached ≥ 1 day"
+    },
+    {
+      "id": "perf.lazy",
+      "category": "Performance",
+      "title": "Image lazy-loading",
+      "status": "pass",
+      "severity": "info",
+      "detail": "8/57 images use loading=\"lazy\""
+    },
+    {
+      "id": "mixed",
+      "category": "SSL/TLS",
+      "title": "Mixed content",
+      "status": "pass",
+      "severity": "info",
+      "detail": "No insecure resources on the homepage"
+    },
+    {
+      "id": "page.basics",
+      "category": "Health",
+      "title": "Page basics",
+      "status": "pass",
+      "severity": "info",
+      "detail": "title=\"SJ Solutions &amp; Infotech | Custom Software, Web Development &amp; A\"; lang=en; canonical=https://sjweb4u.com"
+    }
+  ],
+  "tools": [],
+  "osint": {
+    "subdomains": [],
+    "emails": []
+  },
+  "options": {
+    "modules": [
+      "tls",
+      "headers",
+      "exposure",
+      "cms",
+      "health",
+      "dns"
+    ],
+    "tools": [],
+    "authorized": false
+  },
+  "disclaimer": "Automated results — verify before acting. Active scanning must only be performed on systems you own or have written permission to test."
+}

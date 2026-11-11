@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SJ WebScan — Website Vulnerability & Health Scanner</title>
-<link rel="icon" href="data:,">
 <style>
   :root {
     --bg: #0d1117; --panel: #161b22; --panel2: #1c232d; --line: #2a3340; --text: #e6edf3; --muted: #8b98a8;
@@ -22,8 +21,8 @@
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
   .card h2 { font-size: 14px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 600; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  input[type=text], input[type=search], input[type=password], select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; }
-  input[type=text]:focus, input[type=search]:focus, input[type=password]:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  input[type=text], input[type=search], select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; }
+  input[type=text]:focus, input[type=search]:focus { outline: 2px solid var(--accent); border-color: transparent; }
   #url { flex: 1; min-width: 260px; font-size: 16px; }
   button { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 9px 14px; font: inherit; cursor: pointer; }
   button:hover { border-color: var(--accent); }
@@ -76,21 +75,6 @@
   .chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .chips span { font: 11.5px var(--mono); padding: 2px 8px; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; }
   .err { color: var(--fail); }
-  .ok { color: var(--pass); }
-  #login { position: fixed; inset: 0; background: rgba(5,8,12,.88); display: flex; align-items: center; justify-content: center; z-index: 50; }
-  #login .box { width: min(440px, 92vw); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
-  #login h2 { margin: 0 0 6px; font-size: 18px; }
-  #login input { width: 100%; margin: 14px 0 10px; font: 13px var(--mono); }
-  .userchip { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
-  .userchip b { color: var(--text); font-weight: 600; }
-  .scope { font-size: 10px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 10px; }
-  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; border: 1px solid var(--line); background: var(--panel2); }
-  .badge.good { border-color: rgba(63,185,80,.5); color: var(--pass); }
-  .badge.bad { border-color: rgba(248,81,73,.5); color: var(--fail); }
-  .verify-out { font-size: 12.5px; margin-top: 8px; word-break: break-word; }
-  .hist .del { float: right; opacity: .5; font-size: 12px; padding: 0 4px; border: 0; background: none; }
-  .hist .del:hover { opacity: 1; color: var(--fail); }
-  code.fp { font: 11px var(--mono); color: var(--muted); word-break: break-all; }
 </style>
 </head>
 <body>
@@ -98,21 +82,7 @@
   <h1>🛡️ SJ WebScan</h1><span class="ver" id="ver"></span>
   <span class="spacer"></span>
   <span class="muted" id="toolCount"></span>
-  <span class="userchip hidden" id="userChip"><span>Signed in as <b id="userName"></b></span><span id="userScopes"></span><button class="small" id="logout" type="button">Sign out</button></span>
 </header>
-
-<div id="login" class="hidden">
-  <form class="box" id="loginForm" autocomplete="off">
-    <h2>🔐 Sign in to SJ WebScan</h2>
-    <div class="muted" style="font-size:13px">Paste your API key. Create one on the server with<br><code>node bin/webscan.js keys create "Your name"</code></div>
-    <input id="apiKey" type="password" placeholder="sjwk_xxxxxxxx_…" required>
-    <div class="row" style="justify-content:space-between">
-      <span id="loginErr" class="err" style="font-size:13px"></span>
-      <button class="primary" type="submit" id="loginBtn">Sign in</button>
-    </div>
-    <div class="muted" style="font-size:12px;margin-top:12px">The key is exchanged for a short-lived session token; the key itself is not stored in the browser.</div>
-  </form>
-</div>
 
 <div class="layout">
 <main>
@@ -156,9 +126,8 @@
   <section id="results" class="hidden">
     <div class="card">
       <div class="row" style="justify-content:space-between;margin-bottom:12px">
-        <div><b id="rUrl"></b> <span class="muted" id="rMeta"></span> <span id="sigBadge"></span></div>
+        <div><b id="rUrl"></b> <span class="muted" id="rMeta"></span></div>
         <div class="row">
-          <button id="verifyCur" title="Re-check the SHA-256 hash and Ed25519 signature on the server">Verify signature</button>
           <button id="dlJson">⬇ Download JSON</button>
           <button id="copyJson">Copy JSON</button>
         </div>
@@ -170,7 +139,6 @@
         <div class="counts" id="counts"></div>
       </div>
       <div style="margin-top:12px" class="muted" id="tech"></div>
-      <div class="verify-out" id="verifyCurOut"></div>
     </div>
 
     <div class="card">
@@ -206,17 +174,6 @@
     <div id="history" style="margin-top:10px"></div>
   </div>
   <div class="card">
-    <h2>Verify a report</h2>
-    <div class="muted" style="font-size:13px">Check that a JSON report was signed by this scanner and hasn't been edited.</div>
-    <input type="file" id="verifyFile" accept=".json,application/json" style="margin-top:10px;font-size:12px;max-width:100%">
-    <div class="verify-out" id="verifyFileOut"></div>
-    <div style="margin-top:12px;font-size:12px" class="muted">Signing key <code class="fp" id="keyFp"></code><br><a href="/api/public-key?pem" style="color:var(--accent)">⬇ Download public key</a> to share with clients, along with <code>scripts/verify-report.mjs</code>.</div>
-  </div>
-  <div class="card">
-    <h2>Limits</h2>
-    <div class="muted" style="font-size:12.5px" id="limits"></div>
-  </div>
-  <div class="card">
     <h2>About</h2>
     <div class="muted" style="font-size:13px">Built-in checks are passive (a few dozen normal HTTP requests). External tools run on this server only if installed — see <code>scripts/install-tools.sh</code>. Results are automated: verify before reporting to a client.</div>
   </div>
@@ -227,95 +184,27 @@
 (() => {
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // Session token lives in sessionStorage (cleared when the tab closes); the raw API key is never stored
-  const store = {
-    get: (k) => { try { return sessionStorage.getItem(k); } catch { return null; } },
-    set: (k, v) => { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch {} },
-  };
-  let session = store.get('webscan_session');
-  let who = null, tools = [], current = null, meta = {}, loginWaiters = [];
+  let token = '';
+  try { token = localStorage.getItem('webscan_token') || ''; } catch {}
+  let tools = [], current = null, meta = {};
 
-  class ApiError extends Error { constructor(msg, status) { super(msg); this.status = status; } }
-
-  async function api(path, opts = {}, retried = false) {
-    const headers = { 'Content-Type': 'application/json', ...(session ? { Authorization: 'Session ' + session } : {}), ...(opts.headers || {}) };
-    const res = await fetch(path, { method: opts.method || 'GET', body: opts.body, headers });
+  async function api(path, opts = {}) {
+    const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(opts.headers || {}) } });
+    if (res.status === 401) {
+      token = prompt('This scanner requires an access token (WEBSCAN_TOKEN):') || '';
+      try { localStorage.setItem('webscan_token', token); } catch {}
+      return api(path, opts);
+    }
     const data = await res.json().catch(() => ({}));
-    if (res.status === 401 && meta.authRequired && !retried && !opts.noLogin) {
-      session = null; store.set('webscan_session', null);
-      await requireLogin(data.error);
-      return api(path, opts, true);
-    }
-    if (!res.ok) {
-      let msg = data.error || res.statusText;
-      if (data.attemptsLeft !== undefined) msg += ` — ${data.attemptsLeft} attempt(s) left before lockout`;
-      const ra = res.headers.get('Retry-After');
-      if (res.status === 429 && ra && !/retry|min/i.test(msg)) msg += ` (retry in ${ra}s)`;
-      throw new ApiError(msg, res.status);
-    }
+    if (!res.ok) throw new Error(data.error || res.statusText);
     return data;
-  }
-
-  // ---------- sign-in ----------
-  function requireLogin(msg) {
-    $('#login').classList.remove('hidden');
-    $('#loginErr').textContent = msg && !/required/i.test(msg) ? msg : '';
-    setTimeout(() => $('#apiKey').focus(), 0);
-    return new Promise(r => loginWaiters.push(r));
-  }
-  $('#loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    $('#loginBtn').disabled = true; $('#loginErr').textContent = '';
-    try {
-      const r = await api('/api/session', { method: 'POST', body: JSON.stringify({ apiKey: $('#apiKey').value.trim() }), noLogin: true });
-      session = r.token; store.set('webscan_session', session);
-      $('#apiKey').value = '';
-      $('#login').classList.add('hidden');
-      const w = loginWaiters; loginWaiters = []; w.forEach(f => f());
-    } catch (err) {
-      $('#loginErr').textContent = err.message;
-    } finally { $('#loginBtn').disabled = false; }
-  });
-  $('#logout').addEventListener('click', () => { session = null; store.set('webscan_session', null); location.reload(); });
-
-  const can = (scope) => !!who && (who.scopes.includes(scope) || who.scopes.includes('admin'));
-
-  async function loadWho() {
-    who = await api('/api/whoami');
-    const chip = $('#userChip');
-    chip.classList.toggle('hidden', who.method === 'open');
-    $('#userName').textContent = who.name;
-    $('#userScopes').innerHTML = who.scopes.map(s => `<span class="scope">${esc(s)}</span>`).join(' ');
-    renderLimits();
-    applyPermissions();
-  }
-
-  function applyPermissions() {
-    const box = $('#authBox');
-    if (!meta.allowActive) box.innerHTML = '<span class="muted">Active tools are disabled on this server (ALLOW_ACTIVE=0).</span>';
-    else if (!can('active')) box.innerHTML = '<span class="muted">Your API key can run passive checks only. Active tools need a key with the <b>active</b> scope.</span>';
-    const go = $('#go');
-    if (!can('scan')) { go.disabled = true; go.title = 'Your API key has no "scan" scope (read-only)'; }
-  }
-
-  function renderLimits() {
-    const l = meta.limits || {};
-    $('#limits').innerHTML = [
-      `<b>${l.apiPerMin}</b> API requests / min per IP`,
-      `<b>${l.scansPerHour}</b> scans / hour per key${who && who.scansRemainingThisHour !== undefined ? ` — <span class="ok">${who.scansRemainingThisHour} left</span>` : ''}`,
-      `<b>${l.maxScans}</b> concurrent scans (${l.maxScansPerClient} per key)`,
-      `Lockout after <b>${l.lockoutFailures}</b> failed sign-ins (${l.lockoutMinutes} min)`,
-      `Target throttle: <b>${meta.rps}</b> req/s built-in · <b>${meta.toolRps}</b> req/s tools`,
-    ].join('<br>');
   }
 
   async function init() {
     meta = await api('/api/meta');
     $('#ver').textContent = 'v' + meta.version;
-    $('#keyFp').textContent = meta.reportKeyFingerprint || '';
     $('#modules').innerHTML = meta.modules.map(m => `<label class="chk"><input type="checkbox" class="mod" value="${m}" checked> ${({ tls: 'SSL/TLS', headers: 'Security headers & cookies', exposure: 'Exposed files', cms: 'CMS & JS libraries', health: 'Health & performance', dns: 'DNS & email' })[m] || m}</label>`).join('');
-    if (meta.authRequired && !session) await requireLogin();
-    await loadWho();
+    if (!meta.allowActive) $('#authBox').innerHTML = '<span class="muted">Active tools are disabled on this server (ALLOW_ACTIVE=0).</span>';
     tools = await api('/api/tools');
     $('#toolCount').textContent = `${tools.filter(t => t.installed).length}/${tools.length} tools installed`;
     renderTools();
@@ -346,7 +235,6 @@
     });
   }));
 
-  // ---------- scanning ----------
   $('#form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const body = {
@@ -372,64 +260,35 @@
 
   function logLine(s, isErr) {
     const el = $('#log');
-    const div = document.createElement('div');
-    if (isErr) div.className = 'err';
-    div.textContent = s;
-    el.appendChild(div);
+    const span = document.createElement('div');
+    if (isErr) span.className = 'err';
+    span.textContent = s;
+    el.appendChild(span);
     el.scrollTop = el.scrollHeight;
   }
-  function done() { $('#go').disabled = !can('scan'); $('#go').textContent = 'Scan'; loadWho().catch(() => {}); }
+  function done() { $('#go').disabled = false; $('#go').textContent = 'Scan'; }
 
-  // EventSource can't send auth headers, so each connection uses a one-time 60 s ticket.
-  // The server replays the full event history on connect, so a reconnect just redraws the log.
   function stream(id) {
-    let finished = false, attempts = 0;
-    const connect = async () => {
-      let url = `/api/scan/${id}/events`;
-      try {
-        if (meta.authRequired) {
-          const t = await api(`/api/scan/${id}/ticket`, { method: 'POST' });
-          url += '?ticket=' + encodeURIComponent(t.ticket);
-        }
-      } catch (err) { logLine('✖ ' + err.message, true); done(); return; }
-      $('#log').textContent = '';
-      const es = new EventSource(url);
-      es.addEventListener('log', e => logLine(JSON.parse(e.data)));
-      es.addEventListener('stage', e => $('#stage').textContent = '— ' + JSON.parse(e.data));
-      es.addEventListener('done', async () => {
-        finished = true; es.close();
-        try {
-          const r = await api(`/api/scan/${id}`);
-          $('#stage').textContent = '— complete';
-          showReport(r.report); loadHistory();
-        } catch (err) { logLine('✖ ' + err.message, true); }
-        done();
-      });
-      es.addEventListener('failed', e => {
-        finished = true; es.close();
-        logLine('✖ ' + JSON.parse(e.data), true); $('#stage').textContent = '— failed'; done();
-      });
-      es.onerror = () => {
-        es.close();
-        if (finished) return;
-        if (attempts++ < 5) { $('#stage').textContent = '— reconnecting…'; setTimeout(connect, 2000); }
-        else { logLine('✖ Lost connection to the server. The scan may still finish — check History.', true); done(); }
-      };
-    };
-    connect();
+    const es = new EventSource(`/api/scan/${id}/events${token ? '?token=' + encodeURIComponent(token) : ''}`);
+    es.addEventListener('log', e => logLine(JSON.parse(e.data)));
+    es.addEventListener('stage', e => $('#stage').textContent = '— ' + JSON.parse(e.data));
+    es.addEventListener('done', async () => {
+      es.close();
+      const r = await api(`/api/scan/${id}`);
+      $('#stage').textContent = '— complete';
+      showReport(r.report); loadHistory(); done();
+    });
+    es.addEventListener('error', e => {
+      if (e.data) { logLine('✖ ' + JSON.parse(e.data), true); $('#stage').textContent = '— failed'; }
+      es.close(); done();
+    });
   }
 
-  // ---------- report view ----------
   function showReport(r) {
     current = r;
     $('#results').classList.remove('hidden');
     $('#rUrl').textContent = r.target.finalUrl;
-    $('#rMeta').textContent = `· ${new Date(r.scannedAt).toLocaleString()} · ${(r.durationMs / 1000).toFixed(1)}s${r.options?.requestedBy ? ' · by ' + r.options.requestedBy : ''}`;
-    $('#sigBadge').innerHTML = r.integrity
-      ? `<span class="badge good" title="SHA-256 ${esc(r.integrity.hash)}">🔒 Signed · ${esc(r.integrity.hash.slice(0, 12))}…</span>`
-      : '<span class="badge">Unsigned</span>';
-    $('#verifyCur').classList.toggle('hidden', !r.integrity);
-    $('#verifyCurOut').innerHTML = '';
+    $('#rMeta').textContent = `· ${new Date(r.scannedAt).toLocaleString()} · ${(r.durationMs / 1000).toFixed(1)}s`;
     const col = (n) => n >= 90 ? 'var(--pass)' : n >= 70 ? 'var(--warn)' : 'var(--fail)';
     $('#sOverall').textContent = r.score.overall; $('#sOverall').style.color = col(r.score.overall);
     $('#sGrade').textContent = r.score.grade; $('#sGrade').className = 'grade-' + r.score.grade;
@@ -476,30 +335,6 @@
   ['#fStatus', '#fSev', '#fCat'].forEach(s => $(s).addEventListener('change', renderFindings));
   $('#fText').addEventListener('input', renderFindings);
 
-  // ---------- integrity ----------
-  function renderVerify(r) {
-    return `<span class="badge ${r.valid ? 'good' : 'bad'}">${r.valid ? '✔ VALID' : '✖ INVALID'}</span> ${esc(r.reason)}` +
-      (r.signed ? `<div class="muted" style="margin-top:4px">hash ${r.hashMatches ? 'matches' : '<b class="err">MISMATCH</b>'} · signature ${r.signatureValid ? 'valid' : '<b class="err">invalid</b>'} · signed ${esc(r.signedAt ? new Date(r.signedAt).toLocaleString() : '?')}<br>by <code class="fp">${esc(r.signedBy)}</code>${r.keyMatchesServer === false ? ' <span class="err">(not this server\'s key)</span>' : ''}</div>` : '');
-  }
-  $('#verifyCur').addEventListener('click', async () => {
-    if (!current) return;
-    $('#verifyCurOut').textContent = 'Verifying…';
-    try { $('#verifyCurOut').innerHTML = renderVerify(await api('/api/verify', { method: 'POST', body: JSON.stringify(current) })); }
-    catch (err) { $('#verifyCurOut').innerHTML = `<span class="err">${esc(err.message)}</span>`; }
-  });
-  $('#verifyFile').addEventListener('change', async (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const out = $('#verifyFileOut');
-    out.textContent = 'Verifying…';
-    try {
-      const text = await f.text();
-      try { JSON.parse(text); } catch { throw new Error('Not a valid JSON file'); }
-      out.innerHTML = `<div class="muted">${esc(f.name)}</div>` + renderVerify(await api('/api/verify', { method: 'POST', body: text }));
-    } catch (err) { out.innerHTML = `<span class="err">${esc(err.message)}</span>`; }
-    e.target.value = '';
-  });
-
   $('#dlJson').addEventListener('click', () => {
     if (!current) return;
     const blob = new Blob([JSON.stringify(current, null, 2)], { type: 'application/json' });
@@ -514,22 +349,15 @@
     $('#copyJson').textContent = 'Copied ✓'; setTimeout(() => $('#copyJson').textContent = 'Copy JSON', 1500);
   });
 
-  // ---------- history ----------
   async function loadHistory() {
     try {
       const list = await api('/api/reports');
-      const admin = can('admin');
-      $('#history').innerHTML = list.map(r => `<div>${admin ? `<button class="del" data-del="${esc(r.file)}" title="Delete report">✕</button>` : ''}<a href="#" data-f="${esc(r.file)}"><span class="u">${r.signed ? '🔒 ' : ''}${esc(r.url || r.file)}</span>
-        <span class="m"><b class="grade-${esc(r.grade)}">${esc(r.grade || '?')} ${esc(r.score ?? '')}</b> · ${esc(r.scannedAt ? new Date(r.scannedAt).toLocaleString() : '')}${r.requestedBy ? ' · ' + esc(r.requestedBy.replace(/ \([0-9a-f]{8}\)$/, '')) : ''}</span></a></div>`).join('') || '<div class="muted">No scans yet.</div>';
+      $('#history').innerHTML = list.map(r => `<a href="#" data-f="${esc(r.file)}"><span class="u">${esc(r.url || r.file)}</span>
+        <span class="m"><b class="grade-${esc(r.grade)}">${esc(r.grade || '?')} ${esc(r.score ?? '')}</b> · ${esc(r.scannedAt ? new Date(r.scannedAt).toLocaleString() : '')}</span></a>`).join('') || '<div class="muted">No scans yet.</div>';
       document.querySelectorAll('#history a').forEach(a => a.addEventListener('click', async (e) => {
         e.preventDefault();
-        try { showReport(await api('/api/reports/' + encodeURIComponent(a.dataset.f))); $('#results').scrollIntoView({ behavior: 'smooth' }); }
-        catch (err) { alert(err.message); }
-      }));
-      document.querySelectorAll('#history .del').forEach(b => b.addEventListener('click', async () => {
-        if (!confirm(`Delete ${b.dataset.del}?`)) return;
-        try { await api('/api/reports/' + encodeURIComponent(b.dataset.del), { method: 'DELETE' }); loadHistory(); }
-        catch (err) { alert(err.message); }
+        showReport(await api('/api/reports/' + encodeURIComponent(a.dataset.f)));
+        $('#results').scrollIntoView({ behavior: 'smooth' });
       }));
     } catch (e) { $('#history').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
   }

@@ -1,0 +1,458 @@
+{
+  "scanner": "SJ WebScan",
+  "version": "1.0.0",
+  "scannedAt": "2026-11-10T21:01:57.482Z",
+  "durationMs": 48062,
+  "target": {
+    "input": "http://sapphireinfo.net/",
+    "url": "http://sapphireinfo.net/",
+    "finalUrl": "https://sapphireinfo.net/",
+    "host": "sapphireinfo.net",
+    "domain": "sapphireinfo.net",
+    "redirectChain": [
+      "301 https://sapphireinfo.net/"
+    ]
+  },
+  "technologies": [
+    "WordPress",
+    "Elementor",
+    "PHP",
+    "React",
+    "Bootstrap",
+    "Cloudflare",
+    "Google Analytics / GTM",
+    "reCAPTCHA"
+  ],
+  "score": {
+    "overall": 76,
+    "grade": "C",
+    "security": 71,
+    "health": 88
+  },
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 6,
+    "low": 12,
+    "pass": 18,
+    "warn": 14,
+    "fail": 4,
+    "info": 10,
+    "total": 46,
+    "tools": {
+      "ran": 0,
+      "notInstalled": 0,
+      "skipped": 0,
+      "errors": 0
+    }
+  },
+  "findings": [
+    {
+      "id": "wp.users",
+      "category": "CMS",
+      "title": "WordPress user enumeration (REST API)",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "Usernames exposed via /wp-json/wp/v2/users: admin, sync_sapphire, seo",
+      "fix": "Restrict the users endpoint (security plugin, or rest_endpoints filter unsetting /wp/v2/users for unauthenticated users)."
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.hsts",
+      "title": "Strict-Transport-Security (HSTS)",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "Missing",
+      "fix": "Add: Strict-Transport-Security: max-age=31536000; includeSubDomains"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.xfo",
+      "title": "Clickjacking protection",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "No X-Frame-Options or frame-ancestors",
+      "fix": "Add X-Frame-Options: SAMEORIGIN (or CSP frame-ancestors 'self')."
+    },
+    {
+      "id": "perf.ttfb",
+      "category": "Performance",
+      "title": "Time to first byte (avg of 3)",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "2756 ms (samples: 3379, 2695, 2194 ms) — measured from the scanner's location",
+      "fix": "Enable full-page caching (LiteSpeed Cache / WP Rocket / Laravel response cache), OPcache, a CDN, and check slow DB queries."
+    },
+    {
+      "id": "wp.xmlrpc",
+      "category": "CMS",
+      "title": "XML-RPC enabled",
+      "status": "warn",
+      "severity": "medium",
+      "detail": "/xmlrpc.php is enabled (brute-force amplification / pingback DDoS vector)",
+      "fix": "Disable XML-RPC (add_filter('xmlrpc_enabled', '__return_false') or block /xmlrpc.php at the server) unless Jetpack/app needs it."
+    },
+    {
+      "id": "tls.legacy",
+      "category": "SSL/TLS",
+      "title": "Legacy TLS 1.0/1.1 disabled",
+      "status": "warn",
+      "severity": "medium",
+      "detail": "Server still accepts TLSv1.1",
+      "fix": "Disable TLS 1.0 and 1.1 (nginx: ssl_protocols TLSv1.2 TLSv1.3; Apache: SSLProtocol -all +TLSv1.2 +TLSv1.3)."
+    },
+    {
+      "id": "wp.author",
+      "category": "CMS",
+      "title": "WordPress author enumeration (?author=1)",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Redirects to /author/admin/",
+      "fix": "Block ?author= scans via security plugin or rewrite rule."
+    },
+    {
+      "id": "wp.readme",
+      "category": "CMS",
+      "title": "readme.html present",
+      "status": "warn",
+      "severity": "low",
+      "detail": "https://sapphireinfo.net/readme.html reveals WordPress install",
+      "fix": "Delete readme.html and license.txt from the web root."
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.x-content-type-options",
+      "title": "X-Content-Type-Options",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: X-Content-Type-Options: nosniff"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.referrer-policy",
+      "title": "Referrer-Policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: Referrer-Policy: strict-origin-when-cross-origin"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.permissions-policy",
+      "title": "Permissions-Policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: Permissions-Policy: camera=(), microphone=(), geolocation=()"
+    },
+    {
+      "id": "info.headers",
+      "category": "Information disclosure",
+      "title": "Server / framework version disclosure",
+      "status": "warn",
+      "severity": "low",
+      "detail": "server: cloudflare | x-powered-by: PHP/8.4.27",
+      "fix": "Hide versions: nginx server_tokens off; Apache ServerTokens Prod + ServerSignature Off; PHP expose_php = Off."
+    },
+    {
+      "id": "dns.dmarc",
+      "category": "DNS & Email",
+      "title": "DMARC policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "v=DMARC1; p=none; rua=mailto:ee4a0e74@mxtoolbox.dmarc-report.com; ruf=mailto:ee4a0e74@forensics.dmarc-report.com; fo=1",
+      "fix": "Move from p=none to p=quarantine/reject once reports look clean."
+    },
+    {
+      "id": "perf.load",
+      "category": "Performance",
+      "title": "HTML download time",
+      "status": "warn",
+      "severity": "low",
+      "detail": "3894 ms"
+    },
+    {
+      "id": "perf.size",
+      "category": "Performance",
+      "title": "HTML document size",
+      "status": "warn",
+      "severity": "low",
+      "detail": "481 KB (uncompressed)",
+      "fix": "Reduce inline CSS/JS/SVG, page-builder bloat and inline base64 images."
+    },
+    {
+      "id": "perf.requests",
+      "category": "Performance",
+      "title": "Page resources",
+      "status": "warn",
+      "severity": "low",
+      "detail": "38 scripts, 45 stylesheets, 53 images",
+      "fix": "Combine/defer scripts and remove unused plugins."
+    },
+    {
+      "id": "links.broken",
+      "category": "Health",
+      "title": "Broken links (homepage)",
+      "status": "warn",
+      "severity": "low",
+      "detail": "2/60 broken: https://www.linkedin.com/company/sapphire-info-solutions-p-ltd/ → 403 | https://www.linkedin.com/company/sapphire-info-solutions-p-ltd → 403"
+    },
+    {
+      "id": "sitemap",
+      "category": "Health",
+      "title": "XML sitemap",
+      "status": "warn",
+      "severity": "low",
+      "detail": "No sitemap found"
+    },
+    {
+      "id": "tech.stack",
+      "category": "Technology",
+      "title": "Detected technologies",
+      "status": "info",
+      "severity": "info",
+      "detail": "WordPress, Elementor, PHP, React, Bootstrap, Cloudflare, Google Analytics / GTM, reCAPTCHA | generator: WordPress 7.1.4"
+    },
+    {
+      "id": "wp.login",
+      "category": "CMS",
+      "title": "Default login URL exposed",
+      "status": "info",
+      "severity": "info",
+      "detail": "/wp-login.php reachable — ensure rate limiting / 2FA",
+      "fix": "Add login rate-limiting, 2FA, and optionally move or restrict wp-login.php."
+    },
+    {
+      "id": "wp.components",
+      "category": "CMS",
+      "title": "WordPress plugins/themes visible in source",
+      "status": "info",
+      "severity": "info",
+      "detail": "Plugins: elementor@4.3.6, jeg-elementor-kit@3.3.0, metform@4.3.4, elementskit-lite@4.1.0, brave-popup-builder | Themes: hello-elementor",
+      "fix": "Keep every plugin/theme updated; run the wpscan tool (with an API token) for CVE matching."
+    },
+    {
+      "id": "js.sri",
+      "category": "Vulnerable components",
+      "title": "Third-party scripts without SRI",
+      "status": "info",
+      "severity": "info",
+      "detail": "5 external script(s) from: www.googletagmanager.com, st.outsourceaccelerator.com, cdn.jsdelivr.net, www.statcounter.com",
+      "fix": "Add integrity=\"sha384-…\" crossorigin=\"anonymous\" to static CDN scripts."
+    },
+    {
+      "id": "tls.details",
+      "category": "SSL/TLS",
+      "title": "Certificate details",
+      "status": "info",
+      "severity": "info",
+      "detail": "CN=sapphireinfo.net; SAN=DNS:*.sapphireinfo.net, DNS:sapphireinfo.net; key=256 bits; serial=05C06B85FA87298D02FA30869C67264E68B9"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.cross-origin-opener-policy",
+      "title": "Cross-Origin-Opener-Policy",
+      "status": "info",
+      "severity": "info",
+      "detail": "Missing",
+      "fix": "Optional: Cross-Origin-Opener-Policy: same-origin"
+    },
+    {
+      "id": "dns.records",
+      "category": "DNS & Email",
+      "title": "DNS records",
+      "status": "info",
+      "severity": "info",
+      "detail": "A: 172.67.137.223, 104.21.78.225 | AAAA: 2606:4700:3037::ac43:89df, 2606:4700:3035::6815:4ee1 | NS: lars.ns.cloudflare.com, miki.ns.cloudflare.com | MX: 0 sapphireinfo-net.mail.protection.outlook.com"
+    },
+    {
+      "id": "dns.caa",
+      "category": "DNS & Email",
+      "title": "CAA record",
+      "status": "info",
+      "severity": "info",
+      "detail": "No CAA — any CA may issue certificates",
+      "fix": "Optional: add CAA records (e.g. 0 issue \"letsencrypt.org\") to restrict who can issue certificates."
+    },
+    {
+      "id": "dns.txt",
+      "category": "DNS & Email",
+      "title": "TXT verification records (OSINT)",
+      "status": "info",
+      "severity": "info",
+      "detail": "Services: google-site-verification"
+    },
+    {
+      "id": "securitytxt",
+      "category": "Best practice",
+      "title": "security.txt",
+      "status": "info",
+      "severity": "info",
+      "detail": "Not found",
+      "fix": "Publish /.well-known/security.txt with a Contact: line (RFC 9116)."
+    },
+    {
+      "id": "https.redirect",
+      "category": "SSL/TLS",
+      "title": "HTTP → HTTPS redirect",
+      "status": "pass",
+      "severity": "low",
+      "detail": "HTTP 301 → https://sapphireinfo.net/"
+    },
+    {
+      "id": "wp.version",
+      "category": "CMS",
+      "title": "WordPress core version",
+      "status": "pass",
+      "severity": "info",
+      "detail": "WordPress 7.1.4 (latest 7.1.4) — version is publicly disclosed"
+    },
+    {
+      "id": "js.libs",
+      "category": "Vulnerable components",
+      "title": "JavaScript library versions",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Up to date: jQuery Migrate 3.4.1, jQuery UI 1.14.2, Bootstrap 5.0.2"
+    },
+    {
+      "id": "tls.trusted",
+      "category": "SSL/TLS",
+      "title": "Certificate trusted",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Issued by Let's Encrypt"
+    },
+    {
+      "id": "tls.expiry",
+      "category": "SSL/TLS",
+      "title": "Certificate expiry",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Expires in 33 days (2026-12-14)"
+    },
+    {
+      "id": "tls.protocol",
+      "category": "SSL/TLS",
+      "title": "Negotiated protocol",
+      "status": "pass",
+      "severity": "info",
+      "detail": "TLSv1.3 / TLS_AES_256_GCM_SHA384"
+    },
+    {
+      "id": "tls.http2",
+      "category": "Performance",
+      "title": "HTTP/2 support",
+      "status": "pass",
+      "severity": "info",
+      "detail": "ALPN negotiated h2"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.csp",
+      "title": "Content-Security-Policy",
+      "status": "pass",
+      "severity": "info",
+      "detail": "upgrade-insecure-requests"
+    },
+    {
+      "id": "dns.spf",
+      "category": "DNS & Email",
+      "title": "SPF (email spoofing protection)",
+      "status": "pass",
+      "severity": "info",
+      "detail": "v=spf1 +ip4:103.21.58.10 +include:spf.protection.outlook.com +include:vtigermails.com -all"
+    },
+    {
+      "id": "perf.status",
+      "category": "Health",
+      "title": "Homepage status",
+      "status": "pass",
+      "severity": "info",
+      "detail": "HTTP 200 at https://sapphireinfo.net/ (via 1 redirect(s): 301 https://sapphireinfo.net/)"
+    },
+    {
+      "id": "perf.compression",
+      "category": "Performance",
+      "title": "Text compression",
+      "status": "pass",
+      "severity": "info",
+      "detail": "content-encoding: br"
+    },
+    {
+      "id": "perf.cache",
+      "category": "Performance",
+      "title": "Static asset caching",
+      "status": "pass",
+      "severity": "info",
+      "detail": "All 8 sampled assets cached ≥ 1 day"
+    },
+    {
+      "id": "perf.lazy",
+      "category": "Performance",
+      "title": "Image lazy-loading",
+      "status": "pass",
+      "severity": "info",
+      "detail": "9/53 images use loading=\"lazy\""
+    },
+    {
+      "id": "mixed",
+      "category": "SSL/TLS",
+      "title": "Mixed content",
+      "status": "pass",
+      "severity": "info",
+      "detail": "No insecure resources on the homepage"
+    },
+    {
+      "id": "page.basics",
+      "category": "Health",
+      "title": "Page basics",
+      "status": "pass",
+      "severity": "info",
+      "detail": "title=\"Finance &amp; Accounting Outsourcing Services in the UK\"; lang=en-US; canonical=https://sapphireinfo.net/"
+    },
+    {
+      "id": "expose.none",
+      "category": "Exposed files",
+      "title": "Sensitive file exposure",
+      "status": "pass",
+      "severity": "info",
+      "detail": "45 common sensitive paths checked, none exposed"
+    },
+    {
+      "id": "dirlisting",
+      "category": "Exposed files",
+      "title": "Directory listing",
+      "status": "pass",
+      "severity": "info",
+      "detail": "No directory listing on common folders"
+    },
+    {
+      "id": "robots",
+      "category": "Health",
+      "title": "robots.txt",
+      "status": "pass",
+      "severity": "info",
+      "detail": "34 Disallow rule(s)"
+    }
+  ],
+  "tools": [],
+  "osint": {
+    "subdomains": [],
+    "emails": []
+  },
+  "options": {
+    "modules": [
+      "tls",
+      "headers",
+      "exposure",
+      "cms",
+      "health",
+      "dns"
+    ],
+    "tools": [],
+    "authorized": true
+  },
+  "disclaimer": "Automated results — verify before acting. Active scanning must only be performed on systems you own or have written permission to test."
+}

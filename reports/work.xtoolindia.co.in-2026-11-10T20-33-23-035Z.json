@@ -1,0 +1,352 @@
+{
+  "scanner": "SJ WebScan",
+  "version": "1.0.0",
+  "scannedAt": "2026-11-10T20:33:23.035Z",
+  "durationMs": 7304,
+  "target": {
+    "input": "https://work.xtoolindia.co.in/",
+    "url": "https://work.xtoolindia.co.in/",
+    "finalUrl": "https://work.xtoolindia.co.in/",
+    "host": "work.xtoolindia.co.in",
+    "domain": "work.xtoolindia.co.in",
+    "redirectChain": []
+  },
+  "technologies": [
+    "Cloudflare"
+  ],
+  "score": {
+    "overall": 73,
+    "grade": "C",
+    "security": 63,
+    "health": 96
+  },
+  "summary": {
+    "critical": 0,
+    "high": 2,
+    "medium": 3,
+    "low": 6,
+    "pass": 17,
+    "warn": 7,
+    "fail": 4,
+    "info": 7,
+    "total": 35,
+    "tools": {
+      "ran": 0,
+      "notInstalled": 0,
+      "skipped": 0,
+      "errors": 0
+    }
+  },
+  "findings": [
+    {
+      "id": "https.redirect",
+      "category": "SSL/TLS",
+      "title": "HTTP → HTTPS redirect",
+      "status": "fail",
+      "severity": "high",
+      "detail": "http:// returned 200 without redirecting to HTTPS",
+      "fix": "Permanently redirect (301) all http:// requests to https://."
+    },
+    {
+      "id": "expose/adminer.php",
+      "category": "Exposed files",
+      "title": "Adminer DB tool publicly accessible",
+      "status": "fail",
+      "severity": "high",
+      "detail": "https://work.xtoolindia.co.in/adminer.php (12216 bytes)",
+      "evidence": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf8\">\n  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n  <script nonce=\"pm0kuIE",
+      "fix": "Remove the file from the web root or block it (nginx: location ~ /\\.(?!well-known) { deny all; }  Apache: <FilesMatch> deny). Rotate any credentials it contained."
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.hsts",
+      "title": "Strict-Transport-Security (HSTS)",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "Missing",
+      "fix": "Add: Strict-Transport-Security: max-age=31536000; includeSubDomains"
+    },
+    {
+      "id": "dns.dmarc",
+      "category": "DNS & Email",
+      "title": "DMARC policy",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "No DMARC record at _dmarc.work.xtoolindia.co.in",
+      "fix": "Add TXT _dmarc.work.xtoolindia.co.in: v=DMARC1; p=quarantine; rua=mailto:dmarc@work.xtoolindia.co.in"
+    },
+    {
+      "id": "tls.legacy",
+      "category": "SSL/TLS",
+      "title": "Legacy TLS 1.0/1.1 disabled",
+      "status": "warn",
+      "severity": "medium",
+      "detail": "Server still accepts TLSv1.1",
+      "fix": "Disable TLS 1.0 and 1.1 (nginx: ssl_protocols TLSv1.2 TLSv1.3; Apache: SSLProtocol -all +TLSv1.2 +TLSv1.3)."
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.permissions-policy",
+      "title": "Permissions-Policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: Permissions-Policy: camera=(), microphone=(), geolocation=()"
+    },
+    {
+      "id": "perf.ttfb",
+      "category": "Performance",
+      "title": "Time to first byte (avg of 3)",
+      "status": "warn",
+      "severity": "low",
+      "detail": "776 ms (samples: 1036, 798, 493 ms) — measured from the scanner's location",
+      "fix": "Enable full-page caching (LiteSpeed Cache / WP Rocket / Laravel response cache), OPcache, a CDN, and check slow DB queries."
+    },
+    {
+      "id": "page.basics",
+      "category": "Health",
+      "title": "Page basics",
+      "status": "warn",
+      "severity": "low",
+      "detail": "missing meta description"
+    },
+    {
+      "id": "robots",
+      "category": "Health",
+      "title": "robots.txt",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing"
+    },
+    {
+      "id": "sitemap",
+      "category": "Health",
+      "title": "XML sitemap",
+      "status": "warn",
+      "severity": "low",
+      "detail": "No sitemap found"
+    },
+    {
+      "id": "dns.spf",
+      "category": "DNS & Email",
+      "title": "SPF (email spoofing protection)",
+      "status": "warn",
+      "severity": "low",
+      "detail": "No SPF record",
+      "fix": "Domain sends no mail? Add \"v=spf1 -all\" to stop spoofing."
+    },
+    {
+      "id": "tech.stack",
+      "category": "Technology",
+      "title": "Detected technologies",
+      "status": "info",
+      "severity": "info",
+      "detail": "Cloudflare"
+    },
+    {
+      "id": "tls.details",
+      "category": "SSL/TLS",
+      "title": "Certificate details",
+      "status": "info",
+      "severity": "info",
+      "detail": "CN=xtoolindia.co.in; SAN=DNS:xtoolindia.co.in, DNS:*.xtoolindia.co.in; key=256 bits; serial=B90CED2F28A8A89E137D9E8F1CBA0D0A"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.cross-origin-opener-policy",
+      "title": "Cross-Origin-Opener-Policy",
+      "status": "info",
+      "severity": "info",
+      "detail": "Missing",
+      "fix": "Optional: Cross-Origin-Opener-Policy: same-origin"
+    },
+    {
+      "id": "perf.requests",
+      "category": "Performance",
+      "title": "Page resources",
+      "status": "info",
+      "severity": "info",
+      "detail": "1 scripts, 0 stylesheets, 0 images"
+    },
+    {
+      "id": "securitytxt",
+      "category": "Best practice",
+      "title": "security.txt",
+      "status": "info",
+      "severity": "info",
+      "detail": "Not found",
+      "fix": "Publish /.well-known/security.txt with a Contact: line (RFC 9116)."
+    },
+    {
+      "id": "dns.records",
+      "category": "DNS & Email",
+      "title": "DNS records",
+      "status": "info",
+      "severity": "info",
+      "detail": "A: 172.67.157.159, 104.21.14.24 | AAAA: 2606:4700:3037::ac43:9d9f, 2606:4700:3034::6815:e18 | NS: - | MX: -"
+    },
+    {
+      "id": "dns.caa",
+      "category": "DNS & Email",
+      "title": "CAA record",
+      "status": "info",
+      "severity": "info",
+      "detail": "No CAA — any CA may issue certificates",
+      "fix": "Optional: add CAA records (e.g. 0 issue \"letsencrypt.org\") to restrict who can issue certificates."
+    },
+    {
+      "id": "tls.trusted",
+      "category": "SSL/TLS",
+      "title": "Certificate trusted",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Issued by Google Trust Services"
+    },
+    {
+      "id": "tls.expiry",
+      "category": "SSL/TLS",
+      "title": "Certificate expiry",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Expires in 81 days (2027-01-31)"
+    },
+    {
+      "id": "tls.protocol",
+      "category": "SSL/TLS",
+      "title": "Negotiated protocol",
+      "status": "pass",
+      "severity": "info",
+      "detail": "TLSv1.2 / ECDHE-ECDSA-AES128-GCM-SHA256"
+    },
+    {
+      "id": "tls.http2",
+      "category": "Performance",
+      "title": "HTTP/2 support",
+      "status": "pass",
+      "severity": "info",
+      "detail": "ALPN negotiated h2"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.csp",
+      "title": "Content-Security-Policy",
+      "status": "pass",
+      "severity": "info",
+      "detail": "script-src 'nonce-gdYNSZCX+DaLcmkyuX9dYw=='; style-src 'nonce-gdYNSZCX+DaLcmkyuX9dYw=='; frame-ancestors 'self'"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.xfo",
+      "title": "Clickjacking protection",
+      "status": "pass",
+      "severity": "info",
+      "detail": "X-Frame-Options: SAMEORIGIN"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.x-content-type-options",
+      "title": "X-Content-Type-Options",
+      "status": "pass",
+      "severity": "info",
+      "detail": "nosniff"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.referrer-policy",
+      "title": "Referrer-Policy",
+      "status": "pass",
+      "severity": "info",
+      "detail": "strict-origin-when-cross-origin"
+    },
+    {
+      "id": "info.headers",
+      "category": "Information disclosure",
+      "title": "Server / framework version disclosure",
+      "status": "pass",
+      "severity": "info",
+      "detail": "server: cloudflare"
+    },
+    {
+      "id": "perf.status",
+      "category": "Health",
+      "title": "Homepage status",
+      "status": "pass",
+      "severity": "info",
+      "detail": "HTTP 200 at https://work.xtoolindia.co.in/"
+    },
+    {
+      "id": "perf.load",
+      "category": "Performance",
+      "title": "HTML download time",
+      "status": "pass",
+      "severity": "info",
+      "detail": "1040 ms"
+    },
+    {
+      "id": "perf.size",
+      "category": "Performance",
+      "title": "HTML document size",
+      "status": "pass",
+      "severity": "info",
+      "detail": "12 KB (uncompressed)"
+    },
+    {
+      "id": "perf.compression",
+      "category": "Performance",
+      "title": "Text compression",
+      "status": "pass",
+      "severity": "info",
+      "detail": "content-encoding: br"
+    },
+    {
+      "id": "perf.cache",
+      "category": "Performance",
+      "title": "Static asset caching",
+      "status": "pass",
+      "severity": "info",
+      "detail": "All 1 sampled assets cached ≥ 1 day"
+    },
+    {
+      "id": "mixed",
+      "category": "SSL/TLS",
+      "title": "Mixed content",
+      "status": "pass",
+      "severity": "info",
+      "detail": "No insecure resources on the homepage"
+    },
+    {
+      "id": "links.broken",
+      "category": "Health",
+      "title": "Broken links (homepage)",
+      "status": "pass",
+      "severity": "info",
+      "detail": "0 links checked, none broken"
+    },
+    {
+      "id": "dirlisting",
+      "category": "Exposed files",
+      "title": "Directory listing",
+      "status": "pass",
+      "severity": "info",
+      "detail": "No directory listing on common folders"
+    }
+  ],
+  "tools": [],
+  "osint": {
+    "subdomains": [],
+    "emails": []
+  },
+  "options": {
+    "modules": [
+      "tls",
+      "headers",
+      "exposure",
+      "cms",
+      "health",
+      "dns"
+    ],
+    "tools": [],
+    "authorized": true
+  },
+  "disclaimer": "Automated results — verify before acting. Active scanning must only be performed on systems you own or have written permission to test."
+}

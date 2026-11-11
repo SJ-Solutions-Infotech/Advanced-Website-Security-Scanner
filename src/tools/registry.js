@@ -4,11 +4,8 @@
 //   passive (intrusive:false) — OSINT / fingerprinting, safe to run against any site
 //   active  (intrusive:true)  — port scans, vuln templates, brute-force content discovery.
 //                               Only run with --authorized (written permission from the owner).
-//
-// args(target, { wordlist, rps }) — rps is the per-tool request rate cap (--tool-rps, default 50).
 
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
 
 const lines = (s) => s.split('\n').map(l => l.trim()).filter(Boolean);
 const uniqLines = (s) => [...new Set(lines(s))];
@@ -25,7 +22,7 @@ export function defaultWordlist() {
     '/usr/share/wordlists/seclists/Discovery/Web-Content/common.txt',
     '/usr/share/wordlists/dirb/common.txt',
     '/usr/share/dirb/wordlists/common.txt',
-    fileURLToPath(new URL('../../wordlists/common.txt', import.meta.url)),
+    new URL('../../wordlists/common.txt', import.meta.url).pathname,
   ].filter(Boolean);
   return candidates.find(p => { try { return fs.statSync(p).isFile(); } catch { return false; } });
 }
@@ -34,8 +31,7 @@ export const TOOLS = [
   // ───────────── OSINT / passive recon ─────────────
   {
     id: 'whois', name: 'whois', category: 'OSINT', intrusive: false, bins: ['whois'],
-    homepage: 'https://github.com/rfc1036/whois', installWin: 'go install github.com/likexian/whois/cmd/whois@latest', 
-    install: 'apt install whois',
+    homepage: 'https://github.com/rfc1036/whois', install: 'apt install whois',
     args: (t) => [t.domain], timeout: 30,
     parse: (out) => {
       const pick = (re) => out.match(re)?.[1]?.trim();
@@ -53,15 +49,13 @@ export const TOOLS = [
   },
   {
     id: 'dig', name: 'dig (BIND)', category: 'OSINT', intrusive: false, bins: ['dig'],
-    homepage: 'https://www.isc.org/bind/', installWin: 'No native Windows build — skip it (the built-in DNS module covers this) or use WSL', 
-    install: 'apt install dnsutils',
+    homepage: 'https://www.isc.org/bind/', install: 'apt install dnsutils',
     args: (t) => ['+noall', '+answer', t.domain, 'A', t.domain, 'AAAA', t.domain, 'MX', t.domain, 'NS', t.domain, 'TXT', t.domain, 'SOA', 'www.' + t.domain, 'CNAME'], timeout: 30,
     parse: (out) => ({ summary: `${lines(out).length} record(s)`, items: lines(out) }),
   },
   {
     id: 'dnsrecon', name: 'DNSRecon', category: 'OSINT', intrusive: false, bins: ['dnsrecon'],
-    homepage: 'https://github.com/darkoperator/dnsrecon', installWin: 'pipx install git+https://github.com/darkoperator/dnsrecon.git', 
-    install: 'pipx install dnsrecon  (or apt install dnsrecon)',
+    homepage: 'https://github.com/darkoperator/dnsrecon', install: 'pipx install dnsrecon  (or apt install dnsrecon)',
     args: (t) => ['-d', t.domain, '-t', 'std,axfr'], timeout: 180,
     parse: (out) => {
       const findings = [];
@@ -71,27 +65,23 @@ export const TOOLS = [
   },
   {
     id: 'subfinder', name: 'Subfinder', category: 'OSINT', intrusive: false, bins: ['subfinder'],
-    homepage: 'https://github.com/projectdiscovery/subfinder', installWin: 'go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest', 
-    install: 'go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest',
+    homepage: 'https://github.com/projectdiscovery/subfinder', install: 'go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest',
     args: (t) => ['-d', t.domain, '-silent', '-all'], timeout: 300, parse: (out, t) => hostsOnly(t.domain)(out),
   },
   {
     id: 'amass', name: 'OWASP Amass', category: 'OSINT', intrusive: false, bins: ['amass'],
-    homepage: 'https://github.com/owasp-amass/amass', installWin: 'go install -v github.com/owasp-amass/amass/v4/...@master', 
-    install: 'go install -v github.com/owasp-amass/amass/v4/...@master  (or apt install amass)',
+    homepage: 'https://github.com/owasp-amass/amass', install: 'go install -v github.com/owasp-amass/amass/v4/...@master  (or apt install amass)',
     args: (t) => ['enum', '-passive', '-d', t.domain, '-timeout', '5'], timeout: 420,
     parse: (out, t) => hostsOnly(t.domain)(lines(out).map(l => l.split(/\s+/)[0]).join('\n')),
   },
   {
     id: 'assetfinder', name: 'assetfinder', category: 'OSINT', intrusive: false, bins: ['assetfinder'],
-    homepage: 'https://github.com/tomnomnom/assetfinder', installWin: 'go install github.com/tomnomnom/assetfinder@latest', 
-    install: 'go install github.com/tomnomnom/assetfinder@latest',
+    homepage: 'https://github.com/tomnomnom/assetfinder', install: 'go install github.com/tomnomnom/assetfinder@latest',
     args: (t) => ['--subs-only', t.domain], timeout: 180, parse: (out, t) => hostsOnly(t.domain)(out),
   },
   {
     id: 'theharvester', name: 'theHarvester', category: 'OSINT', intrusive: false, bins: ['theHarvester', 'theharvester'],
-    homepage: 'https://github.com/laramies/theHarvester', installWin: 'pipx install git+https://github.com/laramies/theHarvester.git', 
-    install: 'apt install theharvester  (or pipx install theHarvester)',
+    homepage: 'https://github.com/laramies/theHarvester', install: 'apt install theharvester  (or pipx install theHarvester)',
     args: (t) => ['-d', t.domain, '-b', process.env.HARVESTER_SOURCES || 'crtsh,hackertarget,rapiddns,otx,duckduckgo', '-l', '200'], timeout: 300,
     parse: (out, t) => {
       const emails = [...new Set(out.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi) || [])].filter(e => !/cmartorella|edge-security/i.test(e));
@@ -101,20 +91,17 @@ export const TOOLS = [
   },
   {
     id: 'waybackurls', name: 'waybackurls', category: 'OSINT', intrusive: false, bins: ['waybackurls'],
-    homepage: 'https://github.com/tomnomnom/waybackurls', installWin: 'go install github.com/tomnomnom/waybackurls@latest', 
-    install: 'go install github.com/tomnomnom/waybackurls@latest',
+    homepage: 'https://github.com/tomnomnom/waybackurls', install: 'go install github.com/tomnomnom/waybackurls@latest',
     args: (t) => [t.domain], timeout: 240, parse: urlsParser,
   },
   {
     id: 'gau', name: 'gau (GetAllUrls)', category: 'OSINT', intrusive: false, bins: ['gau'],
-    homepage: 'https://github.com/lc/gau', installWin: 'go install github.com/lc/gau/v2/cmd/gau@latest', 
-    install: 'go install github.com/lc/gau/v2/cmd/gau@latest',
+    homepage: 'https://github.com/lc/gau', install: 'go install github.com/lc/gau/v2/cmd/gau@latest',
     args: (t) => ['--threads', '5', t.domain], timeout: 300, parse: urlsParser,
   },
   {
     id: 'dnsx', name: 'dnsx', category: 'OSINT', intrusive: false, bins: ['dnsx'],
-    homepage: 'https://github.com/projectdiscovery/dnsx', installWin: 'go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest', 
-    install: 'go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest',
+    homepage: 'https://github.com/projectdiscovery/dnsx', install: 'go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest',
     // feeds the target + any subdomains discovered by earlier tools via stdin
     stdin: (t, ctx) => [t.domain, ...(ctx.subdomains || [])].join('\n'),
     args: () => ['-silent', '-a', '-aaaa', '-cname', '-resp'], timeout: 300,
@@ -128,8 +115,7 @@ export const TOOLS = [
   // ───────────── Fingerprinting / recon ─────────────
   {
     id: 'httpx', name: 'httpx (ProjectDiscovery)', category: 'Recon', intrusive: false, bins: ['httpx-pd', 'httpx'],
-    homepage: 'https://github.com/projectdiscovery/httpx', installWin: 'go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest', 
-    install: 'go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest',
+    homepage: 'https://github.com/projectdiscovery/httpx', install: 'go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest',
     stdin: (t, ctx) => [t.url, ...(ctx.subdomains || []).slice(0, 200)].join('\n'),
     args: () => ['-silent', '-json', '-title', '-tech-detect', '-status-code', '-web-server', '-ip', '-cdn', '-follow-redirects'], timeout: 300,
     parse: (out) => {
@@ -140,15 +126,13 @@ export const TOOLS = [
   },
   {
     id: 'whatweb', name: 'WhatWeb', category: 'Recon', intrusive: false, bins: ['whatweb'],
-    homepage: 'https://github.com/urbanadventurer/WhatWeb', installWin: 'Ruby/Linux-only — not supported on Windows; use WSL', 
-    install: 'apt install whatweb',
+    homepage: 'https://github.com/urbanadventurer/WhatWeb', install: 'apt install whatweb',
     args: (t) => ['--color=never', '--no-errors', '-a', '1', t.url], timeout: 120,
     parse: (out) => ({ summary: tail(out, 2).slice(0, 300), items: lines(out).flatMap(l => l.split(/,\s(?=[A-Z])/)).slice(0, 80) }),
   },
   {
     id: 'wafw00f', name: 'WAFW00F', category: 'Recon', intrusive: true, bins: ['wafw00f'],
-    homepage: 'https://github.com/EnableSecurity/wafw00f', installWin: 'pipx install wafw00f', 
-    install: 'pipx install wafw00f  (or apt install wafw00f)',
+    homepage: 'https://github.com/EnableSecurity/wafw00f', install: 'pipx install wafw00f  (or apt install wafw00f)',
     args: (t) => [t.url], timeout: 120,
     parse: (out) => {
       const waf = out.match(/is behind (.+?) WAF/i)?.[1] || (/No WAF detected/i.test(out) ? 'None detected' : 'Unknown');
@@ -157,20 +141,17 @@ export const TOOLS = [
   },
   {
     id: 'katana', name: 'Katana crawler', category: 'Recon', intrusive: true, bins: ['katana'],
-    homepage: 'https://github.com/projectdiscovery/katana', installWin: 'go install github.com/projectdiscovery/katana/cmd/katana@latest', 
-    install: 'go install github.com/projectdiscovery/katana/cmd/katana@latest',
-    args: (t, o) => ['-u', t.url, '-d', '3', '-jc', '-silent', '-rl', String(Math.min(o.rps, 30)), '-ct', '240'], timeout: 300, parse: urlsParser,
+    homepage: 'https://github.com/projectdiscovery/katana', install: 'go install github.com/projectdiscovery/katana/cmd/katana@latest',
+    args: (t) => ['-u', t.url, '-d', '3', '-jc', '-silent', '-rl', '30', '-ct', '240'], timeout: 300, parse: urlsParser,
   },
   {
     id: 'naabu', name: 'Naabu port scanner', category: 'Recon', intrusive: true, bins: ['naabu'],
-    homepage: 'https://github.com/projectdiscovery/naabu', installWin: 'Download naabu_*_windows_amd64.zip from github.com/projectdiscovery/naabu/releases into C:\\tools\\bin (needs Npcap — installed with Nmap)', 
-    install: 'go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest  (needs libpcap-dev)',
+    homepage: 'https://github.com/projectdiscovery/naabu', install: 'go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest  (needs libpcap-dev)',
     args: (t) => ['-host', t.host, '-top-ports', '1000', '-silent', '-rate', '500'], timeout: 300, parse: portsParser,
   },
   {
     id: 'nmap', name: 'Nmap', category: 'Recon', intrusive: true, bins: ['nmap'],
-    homepage: 'https://nmap.org', installWin: 'winget install Insecure.Nmap  (also installs Npcap)', 
-    install: 'apt install nmap',
+    homepage: 'https://nmap.org', install: 'apt install nmap',
     args: (t) => ['-Pn', '-sV', '-T4', '--top-ports', '200', '--open', '--script', 'default,vulners', t.host], timeout: 900,
     parse: (out) => {
       const ports = lines(out).filter(l => /^\d+\/(tcp|udp)\s+open/.test(l));
@@ -186,8 +167,7 @@ export const TOOLS = [
   // ───────────── TLS ─────────────
   {
     id: 'testssl', name: 'testssl.sh', category: 'TLS', intrusive: false, bins: ['testssl.sh', 'testssl'],
-    homepage: 'https://github.com/testssl/testssl.sh', installWin: 'git clone --depth 1 https://github.com/testssl/testssl.sh C:\\tools\\testssl.sh  (runs with Git for Windows bash) — or install Docker Desktop', docker: { image: 'drwetter/testssl.sh' }, 
-    install: 'apt install testssl.sh  (or git clone --depth 1 https://github.com/testssl/testssl.sh)',
+    homepage: 'https://github.com/testssl/testssl.sh', install: 'apt install testssl.sh  (or git clone --depth 1 https://github.com/testssl/testssl.sh)',
     args: (t) => ['--quiet', '--color', '0', '--warnings', 'off', '--fast', '--sneaky', `${t.host}:${t.protocol === 'https' ? t.port : 443}`], timeout: 600,
     parse: (out) => {
       const bad = lines(out).filter(l => /\b(VULNERABLE|NOT ok|offered \(NOT ok\)|CRITICAL|HIGH)\b/.test(l) && !/not vulnerable/i.test(l));
@@ -198,8 +178,7 @@ export const TOOLS = [
   },
   {
     id: 'sslyze', name: 'SSLyze', category: 'TLS', intrusive: false, bins: ['sslyze'],
-    homepage: 'https://github.com/nabla-c0d3/sslyze', installWin: 'pipx install sslyze', 
-    install: 'pipx install sslyze',
+    homepage: 'https://github.com/nabla-c0d3/sslyze', install: 'pipx install sslyze',
     args: (t) => [`${t.host}:${t.protocol === 'https' ? t.port : 443}`, '--mozilla_config=intermediate'], timeout: 300,
     parse: (out) => {
       const fail = /FAILED - Not compliant/i.test(out) || /not compliant/i.test(out);
@@ -210,8 +189,7 @@ export const TOOLS = [
   },
   {
     id: 'sslscan', name: 'sslscan', category: 'TLS', intrusive: false, bins: ['sslscan'],
-    homepage: 'https://github.com/rbsec/sslscan', installWin: 'Download the Windows zip from github.com/rbsec/sslscan/releases into C:\\tools\\sslscan', 
-    install: 'apt install sslscan',
+    homepage: 'https://github.com/rbsec/sslscan', install: 'apt install sslscan',
     args: (t) => ['--no-colour', `${t.host}:${t.protocol === 'https' ? t.port : 443}`], timeout: 180,
     parse: (out) => {
       const enabled = lines(out).filter(l => /^(SSLv2|SSLv3|TLSv1\.0|TLSv1\.1)\s+enabled/i.test(l));
@@ -224,9 +202,8 @@ export const TOOLS = [
   // ───────────── Vulnerability scanners ─────────────
   {
     id: 'nuclei', name: 'Nuclei', category: 'Vulnerability', intrusive: true, bins: ['nuclei'],
-    homepage: 'https://github.com/projectdiscovery/nuclei', installWin: 'go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest', 
-    install: 'go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && nuclei -update-templates',
-    args: (t, o) => ['-u', t.url, '-silent', '-jsonl', '-severity', 'low,medium,high,critical', '-rl', String(o.rps), '-c', String(Math.min(20, o.rps)), '-etags', 'dos,fuzz,intrusive', '-ni'], timeout: 1500,
+    homepage: 'https://github.com/projectdiscovery/nuclei', install: 'go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && nuclei -update-templates',
+    args: (t) => ['-u', t.url, '-silent', '-jsonl', '-severity', 'low,medium,high,critical', '-rl', '50', '-c', '20', '-etags', 'dos,fuzz,intrusive', '-ni'], timeout: 1500,
     parse: (out) => {
       const rows = lines(out).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
       const findings = rows.map(r => ({
@@ -240,8 +217,7 @@ export const TOOLS = [
   },
   {
     id: 'nikto', name: 'Nikto', category: 'Vulnerability', intrusive: true, bins: ['nikto', 'nikto.pl'],
-    homepage: 'https://github.com/sullo/nikto', installWin: 'winget install StrawberryPerl.StrawberryPerl; git clone --depth 1 https://github.com/sullo/nikto C:\\tools\\nikto', 
-    install: 'apt install nikto',
+    homepage: 'https://github.com/sullo/nikto', install: 'apt install nikto',
     args: (t) => ['-h', t.url, '-nointeractive', '-ask', 'no', '-maxtime', '900s', '-Tuning', 'x6'], timeout: 1000,
     parse: (out) => {
       const items = lines(out).filter(l => l.startsWith('+ ') && !/Target (IP|Hostname|Port)|Start Time|End Time|host\(s\) tested|requests:/i.test(l)).map(l => l.slice(2));
@@ -251,8 +227,7 @@ export const TOOLS = [
   },
   {
     id: 'zap', name: 'OWASP ZAP baseline', category: 'Vulnerability', intrusive: true, bins: ['zap-baseline.py', 'zap-baseline'],
-    homepage: 'https://www.zaproxy.org/docs/docker/baseline-scan/', installWin: 'Install Docker Desktop — the scanner then runs ghcr.io/zaproxy/zaproxy:stable automatically', docker: { image: 'ghcr.io/zaproxy/zaproxy:stable', entry: ['zap-baseline.py'] }, 
-    install: 'docker pull ghcr.io/zaproxy/zaproxy:stable  (then alias zap-baseline.py="docker run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py")',
+    homepage: 'https://www.zaproxy.org/docs/docker/baseline-scan/', install: 'docker pull ghcr.io/zaproxy/zaproxy:stable  (then alias zap-baseline.py="docker run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py")',
     args: (t) => ['-t', t.url, '-I', '-m', '3'], timeout: 1200, okExitCodes: [0, 1, 2],
     parse: (out) => {
       const rows = lines(out).filter(l => /^(WARN-NEW|FAIL-NEW|WARN-INPROG|FAIL-INPROG):/.test(l));
@@ -262,8 +237,7 @@ export const TOOLS = [
   },
   {
     id: 'wpscan', name: 'WPScan', category: 'CMS', intrusive: true, bins: ['wpscan'], onlyIf: (ctx) => ctx.tech?.includes('WordPress'),
-    homepage: 'https://github.com/wpscanteam/wpscan', installWin: 'Install Docker Desktop — the scanner then runs wpscanteam/wpscan automatically', docker: { image: 'wpscanteam/wpscan' }, 
-    install: 'gem install wpscan  (free API token: https://wpscan.com — set WPSCAN_API_TOKEN)',
+    homepage: 'https://github.com/wpscanteam/wpscan', install: 'gem install wpscan  (free API token: https://wpscan.com — set WPSCAN_API_TOKEN)',
     args: (t) => ['--url', t.url, '--no-banner', '--random-user-agent', '--format', 'cli-no-colour', '--disable-tls-checks', '-e', 'vp,vt,u1-5,cb,dbe', '--plugins-detection', 'passive',
       ...(process.env.WPSCAN_API_TOKEN ? ['--api-token', process.env.WPSCAN_API_TOKEN] : [])], timeout: 1200, okExitCodes: [0, 5],
     parse: (out) => {
@@ -275,8 +249,7 @@ export const TOOLS = [
   },
   {
     id: 'droopescan', name: 'droopescan', category: 'CMS', intrusive: true, bins: ['droopescan'], onlyIf: (ctx) => ctx.tech?.some(x => ['Drupal', 'Joomla', 'WordPress'].includes(x)),
-    homepage: 'https://github.com/SamJoan/droopescan', installWin: 'pipx install droopescan', 
-    install: 'pipx install droopescan',
+    homepage: 'https://github.com/SamJoan/droopescan', install: 'pipx install droopescan',
     args: (t) => ['scan', '-u', t.url, '-e', 'v,i,t'], timeout: 600,
     parse: (out) => ({ summary: tail(out, 2), items: lines(out).slice(0, 80) }),
   },
@@ -284,33 +257,27 @@ export const TOOLS = [
   // ───────────── Content discovery (wordlist-based) ─────────────
   {
     id: 'ffuf', name: 'ffuf', category: 'Content discovery', intrusive: true, bins: ['ffuf'], needsWordlist: true,
-    homepage: 'https://github.com/ffuf/ffuf', installWin: 'go install github.com/ffuf/ffuf/v2@latest', 
-    install: 'go install github.com/ffuf/ffuf/v2@latest',
-    args: (t, o) => ['-u', `${t.origin}/FUZZ`, '-w', o.wordlist, '-mc', '200,204,301,302,307,401,403', '-ac', '-t', String(Math.min(20, o.rps)), '-rate', String(o.rps), '-s'], timeout: 900,
+    homepage: 'https://github.com/ffuf/ffuf', install: 'go install github.com/ffuf/ffuf/v2@latest',
+    args: (t, o) => ['-u', `${t.origin}/FUZZ`, '-w', o.wordlist, '-mc', '200,204,301,302,307,401,403', '-ac', '-t', '20', '-rate', '50', '-s'], timeout: 900,
     parse: (out, t) => ({ summary: `${uniqLines(out).length} path(s) found`, items: uniqLines(out).map(p => `${t.origin}/${p}`) }),
   },
   {
     id: 'gobuster', name: 'Gobuster', category: 'Content discovery', intrusive: true, bins: ['gobuster'], needsWordlist: true,
-    homepage: 'https://github.com/OJ/gobuster', installWin: 'go install github.com/OJ/gobuster/v3@latest', 
-    install: 'apt install gobuster  (or go install github.com/OJ/gobuster/v3@latest)',
-    args: (t, o) => ['dir', '-u', t.origin, '-w', o.wordlist, '-q', '-t', String(gobusterThreads(o.rps)), '--no-color', '-k', '--delay', `${Math.ceil(gobusterThreads(o.rps) * 1000 / o.rps)}ms`], timeout: 900,
+    homepage: 'https://github.com/OJ/gobuster', install: 'apt install gobuster  (or go install github.com/OJ/gobuster/v3@latest)',
+    args: (t, o) => ['dir', '-u', t.origin, '-w', o.wordlist, '-q', '-t', '20', '--no-color', '-k', '--delay', '20ms'], timeout: 900,
     parse: (out) => ({ summary: `${lines(out).length} path(s) found`, items: lines(out) }),
     validate: (out, err) => /the server returns a status code that matches the provided options for non existing urls/i.test(err + out) ? 'Wildcard responses — site returns 200 for every path, so gobuster results are meaningless (ffuf -ac handles this).' : null,
   },
   {
     id: 'dirsearch', name: 'dirsearch', category: 'Content discovery', intrusive: true, bins: ['dirsearch'],
-    homepage: 'https://github.com/maurosoria/dirsearch', installWin: 'pipx install dirsearch', 
-    install: 'pipx install dirsearch',
-    args: (t, o) => ['-u', t.origin, '-q', '--no-color', '-t', String(Math.min(15, o.rps)), '--max-rate', String(o.rps), '-x', '404,429,500-599', '--format', 'plain'], timeout: 900,
+    homepage: 'https://github.com/maurosoria/dirsearch', install: 'pipx install dirsearch',
+    args: (t) => ['-u', t.origin, '-q', '--no-color', '-t', '15', '--delay', '0.05', '-x', '404,429,500-599', '--format', 'plain'], timeout: 900,
     parse: (out) => {
       const items = lines(out).filter(l => /^\d{3}\s/.test(l) || /^\[\d/.test(l));
       return { summary: `${items.length} path(s) found`, items };
     },
   },
 ];
-
-// gobuster's --delay is per thread, so rps ≈ threads × 1000 / delay
-function gobusterThreads(rps) { return Math.max(1, Math.min(20, Math.floor(rps))); }
 
 function urlsParser(out) {
   const urls = uniqLines(out).filter(u => /^https?:\/\//.test(u));

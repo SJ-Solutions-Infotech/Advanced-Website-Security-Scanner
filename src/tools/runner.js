@@ -1,5 +1,4 @@
 // Executes external tools safely: argv arrays (no shell), timeouts, output caps, ANSI stripping.
-// Works on Linux, macOS and Windows (.exe lookup, Perl/Bash/Python script interpreters, Docker fallback).
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -7,100 +6,39 @@ import os from 'node:os';
 import { TOOLS, defaultWordlist } from './registry.js';
 import { pool } from '../http.js';
 
-const IS_WIN = process.platform === 'win32';
 const MAX_OUT = 4 * 1024 * 1024;
-// Request-rate cap passed to tools that support one (nuclei, ffuf, katana, gobuster, dirsearch)
-export const DEFAULT_TOOL_RPS = Number(process.env.WEBSCAN_TOOL_RPS || 50);
-const HOME = os.homedir();
-const EXTRA_PATHS = IS_WIN
-  ? [
-      path.join(HOME, 'go', 'bin'), path.join(HOME, '.local', 'bin'), 'C:\\Program Files\\Go\\bin',
-      'C:\\Program Files (x86)\\Nmap', 'C:\\Program Files\\Nmap', 'C:\\Strawberry\\perl\\bin',
-      'C:\\tools\\bin', 'C:\\tools\\nikto\\program', 'C:\\tools\\testssl.sh', 'C:\\tools\\sslscan',
-      'C:\\Program Files\\Docker\\Docker\\resources\\bin',
-    ]
-  : [path.join(HOME, 'go/bin'), path.join(HOME, '.local/bin'), '/usr/local/go/bin', '/snap/bin', '/opt/testssl.sh', '/usr/share/nikto', '/opt/homebrew/bin', '/usr/local/bin'];
-// Scripts that need an interpreter on Windows (Linux runs them via their shebang)
-const INTERPRETERS = { '.pl': ['perl'], '.sh': ['bash'], '.py': ['python', 'py'], '.rb': ['ruby'] };
-const WIN_EXTS = ['.exe', '.com'];
+const EXTRA_PATHS = [path.join(os.homedir(), 'go/bin'), path.join(os.homedir(), '.local/bin'), '/usr/local/go/bin', '/snap/bin', '/opt/testssl.sh', '/usr/share/nikto', '/opt/homebrew/bin'];
 const stripAnsi = (s) => s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\r/g, '');
-
-function isFile(p) { try { return fs.statSync(p).isFile(); } catch { return false; } }
 
 const binCache = new Map();
 export function findBin(names) {
   const key = names.join('|');
   if (binCache.has(key)) return binCache.get(key);
-  const dirs = [...(process.env.PATH || '').split(path.delimiter).filter(Boolean), ...EXTRA_PATHS];
+  const dirs = [...(process.env.PATH || '').split(path.delimiter), ...EXTRA_PATHS];
   let found = null;
   outer: for (const n of names) {
-    const ext = path.extname(n).toLowerCase();
-    const candidates = IS_WIN ? (INTERPRETERS[ext] || WIN_EXTS.includes(ext) ? [n] : WIN_EXTS.map(e => n + e)) : [n];
     for (const d of dirs) {
-      for (const c of candidates) {
-        const p = path.join(d, c);
-        if (!isFile(p)) continue;
-        if (!IS_WIN) { try { fs.accessSync(p, fs.constants.X_OK); } catch { continue; } }
-        found = p; break outer;
-      }
+      const p = path.join(d, n);
+      try { fs.accessSync(p, fs.constants.X_OK); if (fs.statSync(p).isFile()) { found = p; break outer; } } catch {}
     }
   }
   binCache.set(key, found);
   return found;
 }
 
-// Git for Windows' bash is preferred: C:\Windows\System32\bash.exe is the WSL launcher and can't see Windows paths
-function findInterpreter(ext) {
-  if (IS_WIN && ext === '.sh') {
-    for (const p of ['C:\\Program Files\\Git\\bin\\bash.exe', 'C:\\Program Files (x86)\\Git\\bin\\bash.exe', path.join(HOME, 'AppData\\Local\\Programs\\Git\\bin\\bash.exe')]) {
-      if (isFile(p)) return p;
-    }
-    const b = findBin(['bash']);
-    return b && !/system32/i.test(b) ? b : null;
-  }
-  return findBin(INTERPRETERS[ext]);
-}
-
-// Returns { cmd, pre, via } or null. pre = args placed before the tool's own args.
-export function resolveTool(tool) {
-  const bin = findBin(tool.bins);
-  if (bin) {
-    const ext = path.extname(bin).toLowerCase();
-    if (IS_WIN && INTERPRETERS[ext]) {
-      const interp = findInterpreter(ext);
-      if (!interp) return null;
-      return { cmd: interp, pre: [bin], via: `${path.basename(interp)} ${bin}` };
-    }
-    return { cmd: bin, pre: [], via: bin };
-  }
-  if (tool.docker && process.env.WEBSCAN_NO_DOCKER !== '1') {
-    const docker = findBin(['docker']);
-    if (docker) {
-      const d = tool.docker;
-      const pre = ['run', '--rm', '-i', ...(d.network ? ['--network', d.network] : []), ...(d.env || []).filter(e => process.env[e]).flatMap(e => ['-e', e]), d.image, ...(d.entry || [])];
-      return { cmd: docker, pre, via: `docker (${d.image})` };
-    }
-  }
-  return null;
-}
-
 export function toolInventory() {
-  return TOOLS.map(t => {
-    const r = resolveTool(t);
-    return {
-      id: t.id, name: t.name, category: t.category, intrusive: t.intrusive, homepage: t.homepage,
-      install: IS_WIN ? (t.installWin || t.install) : t.install,
-      path: r?.via || null, installed: !!r, needsWordlist: !!t.needsWordlist,
-    };
-  });
+  return TOOLS.map(t => ({
+    id: t.id, name: t.name, category: t.category, intrusive: t.intrusive, homepage: t.homepage, install: t.install,
+    path: findBin(t.bins), installed: !!findBin(t.bins), needsWordlist: !!t.needsWordlist,
+  }));
 }
 
 function exec(bin, args, { timeout, stdin, onLine }) {
   return new Promise((resolve) => {
     const t0 = Date.now();
     let out = '', err = '', killed = false;
-    const child = spawn(bin, args, { shell: false, windowsHide: true, env: { ...process.env, NO_COLOR: '1', TERM: 'dumb' }, stdio: ['pipe', 'pipe', 'pipe'] });
-    const timer = setTimeout(() => { killed = true; child.kill('SIGTERM'); setTimeout(() => { try { child.kill('SIGKILL'); } catch {} }, 5000); }, timeout * 1000);
+    const child = spawn(bin, args, { shell: false, env: { ...process.env, NO_COLOR: '1', TERM: 'dumb' }, stdio: ['pipe', 'pipe', 'pipe'] });
+    const timer = setTimeout(() => { killed = true; child.kill('SIGTERM'); setTimeout(() => child.kill('SIGKILL'), 5000); }, timeout * 1000);
     let lineBuf = '';
     child.stdout.on('data', (d) => {
       const s = d.toString();
@@ -108,7 +46,6 @@ function exec(bin, args, { timeout, stdin, onLine }) {
       if (onLine) { lineBuf += s; const parts = lineBuf.split('\n'); lineBuf = parts.pop(); parts.forEach(l => l.trim() && onLine(stripAnsi(l))); }
     });
     child.stderr.on('data', (d) => { if (err.length < 256 * 1024) err += d.toString(); });
-    child.stdin.on('error', () => {});
     child.on('error', (e) => { clearTimeout(timer); resolve({ code: -1, out, err: e.message, ms: Date.now() - t0, killed }); });
     child.on('close', (code) => { clearTimeout(timer); resolve({ code, out: stripAnsi(out), err: stripAnsi(err), ms: Date.now() - t0, killed }); });
     if (stdin) child.stdin.end(stdin); else child.stdin.end();
@@ -117,22 +54,20 @@ function exec(bin, args, { timeout, stdin, onLine }) {
 
 export async function runTool(tool, target, ctx, opts, log) {
   const base = { id: tool.id, name: tool.name, category: tool.category, intrusive: tool.intrusive, homepage: tool.homepage };
-  const resolved = resolveTool(tool);
-  if (!resolved) return { ...base, status: 'not_installed', install: IS_WIN ? (tool.installWin || tool.install) : tool.install };
+  const bin = findBin(tool.bins);
+  if (!bin) return { ...base, status: 'not_installed', install: tool.install };
   if (tool.intrusive && !opts.authorized) return { ...base, status: 'skipped', reason: 'Active/intrusive tool — requires authorization flag' };
   if (tool.onlyIf && !tool.onlyIf(ctx)) return { ...base, status: 'skipped', reason: 'Not applicable to detected technology' };
   const wordlist = opts.wordlist || defaultWordlist();
   if (tool.needsWordlist && !wordlist) return { ...base, status: 'skipped', reason: 'No wordlist found (set WEBSCAN_WORDLIST or --wordlist)' };
 
-  const rps = Math.max(1, Math.floor(Number(opts.toolRps) || DEFAULT_TOOL_RPS));
-  const args = [...resolved.pre, ...tool.args(target, { wordlist, rps })];
+  const args = tool.args(target, { wordlist });
   const stdin = tool.stdin ? tool.stdin(target, ctx) : undefined;
   const timeout = Math.min(tool.timeout || 300, opts.toolTimeout || Infinity);
-  const shown = [path.basename(resolved.cmd), ...args.map(a => (/\s/.test(a) ? `"${a}"` : a))].join(' ');
-  log?.(`▶ ${tool.name}: ${shown}`);
-  const r = await exec(resolved.cmd, args, { timeout, stdin, onLine: opts.verbose ? (l) => log?.(`  ${tool.id} │ ${l.slice(0, 300)}`) : null });
+  log?.(`▶ ${tool.name}: ${path.basename(bin)} ${args.map(a => (/\s/.test(a) ? `"${a}"` : a)).join(' ')}`);
+  const r = await exec(bin, args, { timeout, stdin, onLine: opts.verbose ? (l) => log?.(`  ${tool.id} │ ${l.slice(0, 300)}`) : null });
   const raw = (r.out || '') + (r.err && !r.out ? r.err : '');
-  const result = { ...base, command: shown, via: resolved.via, durationMs: r.ms, exitCode: r.code };
+  const result = { ...base, command: [path.basename(bin), ...args].join(' '), durationMs: r.ms, exitCode: r.code };
 
   const invalid = tool.validate?.(r.out, r.err);
   if (invalid) return { ...result, status: 'error', error: invalid };

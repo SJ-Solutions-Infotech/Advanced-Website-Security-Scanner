@@ -1,0 +1,427 @@
+{
+  "scanner": "SJ WebScan",
+  "version": "1.0.0",
+  "scannedAt": "2026-11-10T20:59:29.665Z",
+  "durationMs": 27903,
+  "target": {
+    "input": "https://www.easyreturn.co.in/",
+    "url": "https://www.easyreturn.co.in/",
+    "finalUrl": "https://www.easyreturn.co.in/",
+    "host": "www.easyreturn.co.in",
+    "domain": "easyreturn.co.in",
+    "redirectChain": []
+  },
+  "technologies": [
+    "WordPress",
+    "Elementor",
+    "PHP",
+    "Google Analytics / GTM",
+    "LiteSpeed"
+  ],
+  "score": {
+    "overall": 78,
+    "grade": "C",
+    "security": 69,
+    "health": 98
+  },
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 5,
+    "low": 9,
+    "pass": 21,
+    "warn": 10,
+    "fail": 4,
+    "info": 8,
+    "total": 43,
+    "tools": {
+      "ran": 0,
+      "notInstalled": 0,
+      "skipped": 0,
+      "errors": 0
+    }
+  },
+  "findings": [
+    {
+      "category": "Security headers",
+      "id": "hdr.hsts",
+      "title": "Strict-Transport-Security (HSTS)",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "Missing",
+      "fix": "Add: Strict-Transport-Security: max-age=31536000; includeSubDomains"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.csp",
+      "title": "Content-Security-Policy",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "Missing",
+      "fix": "Define a CSP, e.g. default-src 'self'; script-src 'self' <trusted CDNs>; object-src 'none'; frame-ancestors 'self'. Start with Report-Only to tune it."
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.xfo",
+      "title": "Clickjacking protection",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "No X-Frame-Options or frame-ancestors",
+      "fix": "Add X-Frame-Options: SAMEORIGIN (or CSP frame-ancestors 'self')."
+    },
+    {
+      "id": "mixed",
+      "category": "SSL/TLS",
+      "title": "Mixed content",
+      "status": "fail",
+      "severity": "medium",
+      "detail": "1 http:// resource(s): http://gmpg.org/xfn/11",
+      "fix": "Change resource URLs to https:// (WordPress: Better Search Replace http://domain → https://domain) and add CSP upgrade-insecure-requests."
+    },
+    {
+      "id": "wp.xmlrpc",
+      "category": "CMS",
+      "title": "XML-RPC enabled",
+      "status": "warn",
+      "severity": "medium",
+      "detail": "/xmlrpc.php is enabled (brute-force amplification / pingback DDoS vector)",
+      "fix": "Disable XML-RPC (add_filter('xmlrpc_enabled', '__return_false') or block /xmlrpc.php at the server) unless Jetpack/app needs it."
+    },
+    {
+      "id": "wp.readme",
+      "category": "CMS",
+      "title": "readme.html present",
+      "status": "warn",
+      "severity": "low",
+      "detail": "https://www.easyreturn.co.in/readme.html reveals WordPress install",
+      "fix": "Delete readme.html and license.txt from the web root."
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.x-content-type-options",
+      "title": "X-Content-Type-Options",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: X-Content-Type-Options: nosniff"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.referrer-policy",
+      "title": "Referrer-Policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: Referrer-Policy: strict-origin-when-cross-origin"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.permissions-policy",
+      "title": "Permissions-Policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "Missing",
+      "fix": "Add: Permissions-Policy: camera=(), microphone=(), geolocation=()"
+    },
+    {
+      "id": "info.headers",
+      "category": "Information disclosure",
+      "title": "Server / framework version disclosure",
+      "status": "warn",
+      "severity": "low",
+      "detail": "server: LiteSpeed | x-powered-by: PHP/8.1.34",
+      "fix": "Hide versions: nginx server_tokens off; Apache ServerTokens Prod + ServerSignature Off; PHP expose_php = Off."
+    },
+    {
+      "id": "perf.size",
+      "category": "Performance",
+      "title": "HTML document size",
+      "status": "warn",
+      "severity": "low",
+      "detail": "354 KB (uncompressed)",
+      "fix": "Reduce inline CSS/JS/SVG, page-builder bloat and inline base64 images."
+    },
+    {
+      "id": "perf.requests",
+      "category": "Performance",
+      "title": "Page resources",
+      "status": "warn",
+      "severity": "low",
+      "detail": "18 scripts, 31 stylesheets, 82 images",
+      "fix": "Combine/defer scripts and remove unused plugins."
+    },
+    {
+      "id": "dns.spf",
+      "category": "DNS & Email",
+      "title": "SPF (email spoofing protection)",
+      "status": "warn",
+      "severity": "low",
+      "detail": "No SPF record",
+      "fix": "Domain sends no mail? Add \"v=spf1 -all\" to stop spoofing."
+    },
+    {
+      "id": "dns.dmarc",
+      "category": "DNS & Email",
+      "title": "DMARC policy",
+      "status": "warn",
+      "severity": "low",
+      "detail": "v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com",
+      "fix": "Move from p=none to p=quarantine/reject once reports look clean."
+    },
+    {
+      "id": "tech.stack",
+      "category": "Technology",
+      "title": "Detected technologies",
+      "status": "info",
+      "severity": "info",
+      "detail": "WordPress, Elementor, PHP, Google Analytics / GTM, LiteSpeed | generator: ThinkRank 2.21.2"
+    },
+    {
+      "id": "wp.components",
+      "category": "CMS",
+      "title": "WordPress plugins/themes visible in source",
+      "status": "info",
+      "severity": "info",
+      "detail": "Plugins: header-footer-elementor@1794313428, jeg-elementor-kit@1794313429, embedpress@1794313430, advanced-post-block@1794313430, elementor@4.4.0, thinkrank@1794313431, essential-addons-for-elementor-lite@6.8.8, mailin, official-facebook-pixel@1793963030, advanced-iframe@1, link-whisper@1791923426, google-site-kit, wp-rocket | Themes: hello-elementor",
+      "fix": "Keep every plugin/theme updated; run the wpscan tool (with an API token) for CVE matching."
+    },
+    {
+      "id": "js.sri",
+      "category": "Vulnerable components",
+      "title": "Third-party scripts without SRI",
+      "status": "info",
+      "severity": "info",
+      "detail": "2 external script(s) from: www.googletagmanager.com, cdn.trustindex.io",
+      "fix": "Add integrity=\"sha384-…\" crossorigin=\"anonymous\" to static CDN scripts."
+    },
+    {
+      "id": "tls.details",
+      "category": "SSL/TLS",
+      "title": "Certificate details",
+      "status": "info",
+      "severity": "info",
+      "detail": "CN=easyreturn.co.in; SAN=DNS:easyreturn.co.in, DNS:www.easyreturn.co.in; key=256 bits; serial=06FCDFFAD46EC862A696B3FC69E4159D5B15"
+    },
+    {
+      "category": "Security headers",
+      "id": "hdr.cross-origin-opener-policy",
+      "title": "Cross-Origin-Opener-Policy",
+      "status": "info",
+      "severity": "info",
+      "detail": "Missing",
+      "fix": "Optional: Cross-Origin-Opener-Policy: same-origin"
+    },
+    {
+      "id": "dns.records",
+      "category": "DNS & Email",
+      "title": "DNS records",
+      "status": "info",
+      "severity": "info",
+      "detail": "A: 27.56.145.199 | AAAA: - | NS: ns72.domaincontrol.com, ns71.domaincontrol.com | MX: -"
+    },
+    {
+      "id": "dns.caa",
+      "category": "DNS & Email",
+      "title": "CAA record",
+      "status": "info",
+      "severity": "info",
+      "detail": "No CAA — any CA may issue certificates",
+      "fix": "Optional: add CAA records (e.g. 0 issue \"letsencrypt.org\") to restrict who can issue certificates."
+    },
+    {
+      "id": "securitytxt",
+      "category": "Best practice",
+      "title": "security.txt",
+      "status": "info",
+      "severity": "info",
+      "detail": "Not found",
+      "fix": "Publish /.well-known/security.txt with a Contact: line (RFC 9116)."
+    },
+    {
+      "id": "https.redirect",
+      "category": "SSL/TLS",
+      "title": "HTTP → HTTPS redirect",
+      "status": "pass",
+      "severity": "low",
+      "detail": "HTTP 301 → https://www.easyreturn.co.in/"
+    },
+    {
+      "id": "wp.version",
+      "category": "CMS",
+      "title": "WordPress core version",
+      "status": "pass",
+      "severity": "info",
+      "detail": "WordPress 7.1.4 (latest 7.1.4) — version is publicly disclosed"
+    },
+    {
+      "id": "wp.users",
+      "category": "CMS",
+      "title": "WordPress user enumeration (REST API)",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Users endpoint not exposing usernames"
+    },
+    {
+      "id": "js.libs",
+      "category": "Vulnerable components",
+      "title": "JavaScript library versions",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Up to date: jQuery Migrate 3.4.1, jQuery UI 1.14.2"
+    },
+    {
+      "id": "tls.trusted",
+      "category": "SSL/TLS",
+      "title": "Certificate trusted",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Issued by Let's Encrypt"
+    },
+    {
+      "id": "tls.expiry",
+      "category": "SSL/TLS",
+      "title": "Certificate expiry",
+      "status": "pass",
+      "severity": "info",
+      "detail": "Expires in 61 days (2027-01-11)"
+    },
+    {
+      "id": "tls.protocol",
+      "category": "SSL/TLS",
+      "title": "Negotiated protocol",
+      "status": "pass",
+      "severity": "info",
+      "detail": "TLSv1.3 / TLS_CHACHA20_POLY1305_SHA256"
+    },
+    {
+      "id": "tls.legacy",
+      "category": "SSL/TLS",
+      "title": "Legacy TLS 1.0/1.1 disabled",
+      "status": "pass",
+      "severity": "info",
+      "detail": "TLS 1.0/1.1 rejected"
+    },
+    {
+      "id": "tls.http2",
+      "category": "Performance",
+      "title": "HTTP/2 support",
+      "status": "pass",
+      "severity": "info",
+      "detail": "ALPN negotiated h2"
+    },
+    {
+      "id": "perf.status",
+      "category": "Health",
+      "title": "Homepage status",
+      "status": "pass",
+      "severity": "info",
+      "detail": "HTTP 200 at https://www.easyreturn.co.in/"
+    },
+    {
+      "id": "perf.ttfb",
+      "category": "Performance",
+      "title": "Time to first byte (avg of 3)",
+      "status": "pass",
+      "severity": "info",
+      "detail": "121 ms (samples: 188, 80, 95 ms) — measured from the scanner's location"
+    },
+    {
+      "id": "perf.load",
+      "category": "Performance",
+      "title": "HTML download time",
+      "status": "pass",
+      "severity": "info",
+      "detail": "381 ms"
+    },
+    {
+      "id": "perf.compression",
+      "category": "Performance",
+      "title": "Text compression",
+      "status": "pass",
+      "severity": "info",
+      "detail": "content-encoding: gzip"
+    },
+    {
+      "id": "perf.cache",
+      "category": "Performance",
+      "title": "Static asset caching",
+      "status": "pass",
+      "severity": "info",
+      "detail": "All 8 sampled assets cached ≥ 1 day"
+    },
+    {
+      "id": "perf.lazy",
+      "category": "Performance",
+      "title": "Image lazy-loading",
+      "status": "pass",
+      "severity": "info",
+      "detail": "2/82 images use loading=\"lazy\""
+    },
+    {
+      "id": "page.basics",
+      "category": "Health",
+      "title": "Page basics",
+      "status": "pass",
+      "severity": "info",
+      "detail": "title=\"File Your Income Tax Return Online in India | Easy Return\"; lang=en-IN; canonical=https://www.easyreturn.co.in/"
+    },
+    {
+      "id": "links.broken",
+      "category": "Health",
+      "title": "Broken links (homepage)",
+      "status": "pass",
+      "severity": "info",
+      "detail": "48 links checked, none broken"
+    },
+    {
+      "id": "expose.none",
+      "category": "Exposed files",
+      "title": "Sensitive file exposure",
+      "status": "pass",
+      "severity": "info",
+      "detail": "45 common sensitive paths checked, none exposed"
+    },
+    {
+      "id": "dirlisting",
+      "category": "Exposed files",
+      "title": "Directory listing",
+      "status": "pass",
+      "severity": "info",
+      "detail": "No directory listing on common folders"
+    },
+    {
+      "id": "robots",
+      "category": "Health",
+      "title": "robots.txt",
+      "status": "pass",
+      "severity": "info",
+      "detail": "4 Disallow rule(s); sensitive-looking paths revealed: /wp-admin/"
+    },
+    {
+      "id": "sitemap",
+      "category": "Health",
+      "title": "XML sitemap",
+      "status": "pass",
+      "severity": "info",
+      "detail": "https://www.easyreturn.co.in/sitemap.xml (4 entries)"
+    }
+  ],
+  "tools": [],
+  "osint": {
+    "subdomains": [],
+    "emails": []
+  },
+  "options": {
+    "modules": [
+      "tls",
+      "headers",
+      "exposure",
+      "cms",
+      "health",
+      "dns"
+    ],
+    "tools": [],
+    "authorized": true
+  },
+  "disclaimer": "Automated results — verify before acting. Active scanning must only be performed on systems you own or have written permission to test."
+}

@@ -1,8 +1,6 @@
 // Orchestrator: runs built-in checks + external tools and produces the JSON report
 import { normalizeTarget, assertPublicTarget } from './target.js';
-import { request, setThrottle, getThrottle } from './http.js';
-import { signReport } from './security/integrity.js';
-import { DEFAULT_TOOL_RPS } from './tools/runner.js';
+import { request } from './http.js';
 import { tlsChecks } from './checks/tls.js';
 import { headerChecks } from './checks/headers.js';
 import { exposureChecks } from './checks/exposure.js';
@@ -12,7 +10,7 @@ import { dnsChecks } from './checks/dns.js';
 import { runTools, PROFILES } from './tools/runner.js';
 import { TOOLS } from './tools/registry.js';
 
-export const VERSION = '1.1.0';
+export const VERSION = '1.0.0';
 export const MODULES = ['tls', 'headers', 'exposure', 'cms', 'health', 'dns'];
 const WEIGHT = { critical: 25, high: 12, medium: 6, low: 2, info: 0 };
 const HEALTH_CATS = new Set(['Health', 'Performance']);
@@ -22,8 +20,7 @@ export async function scan(input, opts = {}, ev = {}) {
   const t0 = Date.now();
   const target = normalizeTarget(input);
   await assertPublicTarget(target.host, opts.allowPrivate);
-  if (opts.rps) setThrottle(opts.rps);
-  log(`Target: ${target.url} (built-in checks capped at ${getThrottle()} req/s per host)`);
+  log(`Target: ${target.url}`);
 
   // Fetch homepage manually following redirects (records chain + re-checks SSRF on each hop)
   let url = target.url, home, chain = [];
@@ -115,11 +112,10 @@ export async function scan(input, opts = {}, ev = {}) {
     findings,
     tools: toolResults,
     osint: { subdomains: ctx.subdomains || [], emails: ctx.emails || [] },
-    options: { modules, tools: toolIds, authorized: !!opts.authorized, rps: getThrottle(), toolRps: Number(opts.toolRps) || DEFAULT_TOOL_RPS, requestedBy: opts.requestedBy || undefined },
+    options: { modules, tools: toolIds, authorized: !!opts.authorized },
     disclaimer: 'Automated results — verify before acting. Active scanning must only be performed on systems you own or have written permission to test.',
   };
-  if (opts.sign !== false) signReport(report);
-  log(`Done in ${(report.durationMs / 1000).toFixed(1)}s — score ${report.score.overall}/100 (${report.score.grade})${report.integrity ? ' · report signed' : ''}`);
+  log(`Done in ${(report.durationMs / 1000).toFixed(1)}s — score ${report.score.overall}/100 (${report.score.grade})`);
   return report;
 }
 
