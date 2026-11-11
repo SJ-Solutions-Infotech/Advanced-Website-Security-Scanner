@@ -1,0 +1,19 @@
+{
+  "name": "sj-webscan",
+  "version": "1.1.0",
+  "description": "Website vulnerability & health scanner — built-in passive checks plus orchestration of 27 open-source OSINT/vulnerability tools. CLI + web UI, JSON output.",
+  "type": "module",
+  "bin": {
+    "webscan": "bin/webscan.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "scan": "node bin/webscan.js",
+    "tools": "node bin/webscan.js tools"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "license": "MIT",
+  "dependencies": {}
+}

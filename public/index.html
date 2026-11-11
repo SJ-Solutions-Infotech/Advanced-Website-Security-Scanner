@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SJ WebScan — Website Vulnerability & Health Scanner</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --panel2: #1c232d; --line: #2a3340; --text: #e6edf3; --muted: #8b98a8;
+    --accent: #4f8cff; --pass: #3fb950; --warn: #d29922; --fail: #f85149; --crit: #c94dff; --info: #6e7a8a; --low: #39c5cf;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  header { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 17px; margin: 0; letter-spacing: .2px; }
+  header .ver { color: var(--muted); font-size: 12px; }
+  header .spacer { flex: 1; }
+  .layout { display: grid; grid-template-columns: 1fr 280px; gap: 20px; padding: 20px 24px; max-width: 1500px; margin: 0 auto; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .card h2 { font-size: 14px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 600; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input[type=text], input[type=search], input[type=password], select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; }
+  input[type=text]:focus, input[type=search]:focus, input[type=password]:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  #url { flex: 1; min-width: 260px; font-size: 16px; }
+  button { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 9px 14px; font: inherit; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; padding: 10px 22px; }
+  button.primary:disabled { opacity: .5; cursor: wait; }
+  button.small { padding: 4px 10px; font-size: 12px; }
+  .chk { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 20px; cursor: pointer; user-select: none; font-size: 13px; }
+  .chk input { accent-color: var(--accent); }
+  .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; margin-top: 8px; }
+  .tool { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); font-size: 13px; cursor: pointer; }
+  .tool.missing { opacity: .45; }
+  .tool .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--info); flex: none; }
+  .tool.installed .dot { background: var(--pass); }
+  .tool .tag { margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
+  .tool .tag.active { color: var(--warn); border-color: var(--warn); }
+  .cat { font-size: 12px; color: var(--muted); margin: 12px 0 2px; font-weight: 600; }
+  .auth { margin-top: 14px; padding: 10px 12px; border: 1px solid var(--warn); border-radius: 8px; background: rgba(210,153,34,.08); font-size: 13px; }
+  details summary { cursor: pointer; color: var(--muted); }
+  #log { font: 12px/1.5 var(--mono); background: #0a0d12; border: 1px solid var(--line); border-radius: 8px; padding: 10px; height: 200px; overflow: auto; white-space: pre-wrap; color: #aab6c4; }
+  .scores { display: grid; grid-template-columns: 170px repeat(2, 1fr) 2fr; gap: 12px; }
+  @media (max-width: 800px) { .scores { grid-template-columns: 1fr 1fr; } }
+  .score-big { text-align: center; border-radius: 10px; padding: 14px; background: var(--panel2); border: 1px solid var(--line); }
+  .score-big .n { font-size: 42px; font-weight: 700; line-height: 1; }
+  .score-big .g { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .bar > i { display: block; height: 100%; }
+  .counts { display: flex; gap: 8px; flex-wrap: wrap; align-content: center; }
+  .pill { padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 13px; background: var(--panel2); border: 1px solid var(--line); }
+  .s-critical { color: var(--crit); } .s-high { color: var(--fail); } .s-medium { color: var(--warn); } .s-low { color: var(--low); } .s-info { color: var(--info); }
+  .st { display: inline-block; min-width: 46px; text-align: center; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .st-pass { background: rgba(63,185,80,.15); color: var(--pass); } .st-warn { background: rgba(210,153,34,.15); color: var(--warn); }
+  .st-fail { background: rgba(248,81,73,.15); color: var(--fail); } .st-info, .st-error { background: rgba(110,122,138,.15); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+  td.detail { color: #c5cfdb; word-break: break-word; }
+  .fix { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .fix::before { content: '↳ Fix: '; color: var(--accent); }
+  pre { font: 12px/1.45 var(--mono); background: #0a0d12; border: 1px solid var(--line); border-radius: 6px; padding: 8px; overflow: auto; max-height: 340px; white-space: pre-wrap; word-break: break-all; margin: 6px 0 0; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .muted { color: var(--muted); }
+  .hist a { display: block; padding: 8px 10px; border-radius: 8px; color: var(--text); text-decoration: none; border: 1px solid transparent; font-size: 13px; }
+  .hist a:hover { border-color: var(--line); background: var(--panel2); }
+  .hist .u { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .hist .m { font-size: 11px; color: var(--muted); }
+  .grade-A, .grade-B { color: var(--pass); } .grade-C { color: var(--warn); } .grade-D, .grade-F { color: var(--fail); }
+  .toolres { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; padding: 8px 12px; background: var(--panel2); }
+  .toolres summary { color: var(--text); }
+  .hidden { display: none !important; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chips span { font: 11.5px var(--mono); padding: 2px 8px; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; }
+  .err { color: var(--fail); }
+  .ok { color: var(--pass); }
+  #login { position: fixed; inset: 0; background: rgba(5,8,12,.88); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  #login .box { width: min(440px, 92vw); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+  #login h2 { margin: 0 0 6px; font-size: 18px; }
+  #login input { width: 100%; margin: 14px 0 10px; font: 13px var(--mono); }
+  .userchip { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .userchip b { color: var(--text); font-weight: 600; }
+  .scope { font-size: 10px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 10px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; border: 1px solid var(--line); background: var(--panel2); }
+  .badge.good { border-color: rgba(63,185,80,.5); color: var(--pass); }
+  .badge.bad { border-color: rgba(248,81,73,.5); color: var(--fail); }
+  .verify-out { font-size: 12.5px; margin-top: 8px; word-break: break-word; }
+  .hist .del { float: right; opacity: .5; font-size: 12px; padding: 0 4px; border: 0; background: none; }
+  .hist .del:hover { opacity: 1; color: var(--fail); }
+  code.fp { font: 11px var(--mono); color: var(--muted); word-break: break-all; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛡️ SJ WebScan</h1><span class="ver" id="ver"></span>
+  <span class="spacer"></span>
+  <span class="muted" id="toolCount"></span>
+  <span class="userchip hidden" id="userChip"><span>Signed in as <b id="userName"></b></span><span id="userScopes"></span><button class="small" id="logout" type="button">Sign out</button></span>
+</header>
+
+<div id="login" class="hidden">
+  <form class="box" id="loginForm" autocomplete="off">
+    <h2>🔐 Sign in to SJ WebScan</h2>
+    <div class="muted" style="font-size:13px">Paste your API key. Create one on the server with<br><code>node bin/webscan.js keys create "Your name"</code></div>
+    <input id="apiKey" type="password" placeholder="sjwk_xxxxxxxx_…" required>
+    <div class="row" style="justify-content:space-between">
+      <span id="loginErr" class="err" style="font-size:13px"></span>
+      <button class="primary" type="submit" id="loginBtn">Sign in</button>
+    </div>
+    <div class="muted" style="font-size:12px;margin-top:12px">The key is exchanged for a short-lived session token; the key itself is not stored in the browser.</div>
+  </form>
+</div>
+
+<div class="layout">
+<main>
+  <section class="card">
+    <form id="form" class="row" autocomplete="off">
+      <input id="url" type="text" placeholder="https://example.com" required>
+      <button class="primary" id="go" type="submit">Scan</button>
+    </form>
+
+    <details style="margin-top:14px" open>
+      <summary>Scan options</summary>
+      <div class="cat">Built-in checks</div>
+      <div class="row" id="modules"></div>
+      <div class="row" style="margin-top:8px">
+        <label class="chk"><input type="checkbox" id="links" checked> Broken-link check</label>
+        <label class="chk">Max links <input type="text" id="maxLinks" value="60" style="width:56px;padding:2px 6px"></label>
+      </div>
+
+      <div class="cat" style="margin-top:16px">External tools (27)
+        <span style="font-weight:400"> — select:
+          <button type="button" class="small" data-sel="none">None</button>
+          <button type="button" class="small" data-sel="passive">Passive (installed)</button>
+          <button type="button" class="small" data-sel="all">All installed</button>
+          <label class="chk" style="margin-left:6px"><input type="checkbox" id="showMissing"> show not installed</label>
+        </span>
+      </div>
+      <div id="tools"></div>
+
+      <div class="auth" id="authBox">
+        <label><input type="checkbox" id="authorized"> <b>I own this website or have written permission to run active security tests on it.</b></label>
+        <div class="muted" style="margin-top:4px">Active tools (port scans, Nuclei, Nikto, ZAP, WPScan, content discovery) send attack-like traffic. Running them without permission may be illegal. Without this box ticked they are skipped.</div>
+      </div>
+    </details>
+  </section>
+
+  <section class="card hidden" id="progressCard">
+    <h2>Progress <span id="stage" class="muted" style="text-transform:none;letter-spacing:0"></span></h2>
+    <div id="log"></div>
+  </section>
+
+  <section id="results" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <div><b id="rUrl"></b> <span class="muted" id="rMeta"></span> <span id="sigBadge"></span></div>
+        <div class="row">
+          <button id="verifyCur" title="Re-check the SHA-256 hash and Ed25519 signature on the server">Verify signature</button>
+          <button id="dlJson">⬇ Download JSON</button>
+          <button id="copyJson">Copy JSON</button>
+        </div>
+      </div>
+      <div class="scores">
+        <div class="score-big"><div class="n" id="sOverall">–</div><div class="g">Overall · Grade <b id="sGrade"></b></div></div>
+        <div class="score-big"><div class="n" id="sSec" style="font-size:30px">–</div><div class="g">Security</div><div class="bar"><i id="bSec"></i></div></div>
+        <div class="score-big"><div class="n" id="sHealth" style="font-size:30px">–</div><div class="g">Health & performance</div><div class="bar"><i id="bHealth"></i></div></div>
+        <div class="counts" id="counts"></div>
+      </div>
+      <div style="margin-top:12px" class="muted" id="tech"></div>
+      <div class="verify-out" id="verifyCurOut"></div>
+    </div>
+
+    <div class="card">
+      <h2>Findings</h2>
+      <div class="filters">
+        <select id="fStatus"><option value="issues">Issues only (fail + warn)</option><option value="">All statuses</option><option value="fail">Fail</option><option value="warn">Warn</option><option value="pass">Pass</option><option value="info">Info</option></select>
+        <select id="fSev"><option value="">All severities</option><option>critical</option><option>high</option><option>medium</option><option>low</option><option>info</option></select>
+        <select id="fCat"><option value="">All categories</option></select>
+        <input id="fText" type="search" placeholder="Search…" style="flex:1;min-width:160px">
+      </div>
+      <table><thead><tr><th style="width:70px">Status</th><th style="width:80px">Severity</th><th style="width:22%">Check</th><th>Detail</th></tr></thead><tbody id="fBody"></tbody></table>
+    </div>
+
+    <div class="card" id="toolsCard">
+      <h2>External tool results</h2>
+      <div id="toolResults"></div>
+    </div>
+
+    <div class="card hidden" id="osintCard">
+      <h2>OSINT</h2>
+      <div id="osint"></div>
+    </div>
+
+    <div class="card">
+      <details><summary>Raw JSON report</summary><pre id="raw" style="max-height:600px"></pre></details>
+    </div>
+  </section>
+</main>
+
+<aside>
+  <div class="card hist">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">History</h2><button class="small" id="refreshHist">↻</button></div>
+    <div id="history" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <h2>Verify a report</h2>
+    <div class="muted" style="font-size:13px">Check that a JSON report was signed by this scanner and hasn't been edited.</div>
+    <input type="file" id="verifyFile" accept=".json,application/json" style="margin-top:10px;font-size:12px;max-width:100%">
+    <div class="verify-out" id="verifyFileOut"></div>
+    <div style="margin-top:12px;font-size:12px" class="muted">Signing key <code class="fp" id="keyFp"></code><br><a href="/api/public-key?pem" style="color:var(--accent)">⬇ Download public key</a> to share with clients, along with <code>scripts/verify-report.mjs</code>.</div>
+  </div>
+  <div class="card">
+    <h2>Limits</h2>
+    <div class="muted" style="font-size:12.5px" id="limits"></div>
+  </div>
+  <div class="card">
+    <h2>About</h2>
+    <div class="muted" style="font-size:13px">Built-in checks are passive (a few dozen normal HTTP requests). External tools run on this server only if installed — see <code>scripts/install-tools.sh</code>. Results are automated: verify before reporting to a client.</div>
+  </div>
+</aside>
+</div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Session token lives in sessionStorage (cleared when the tab closes); the raw API key is never stored
+  const store = {
+    get: (k) => { try { return sessionStorage.getItem(k); } catch { return null; } },
+    set: (k, v) => { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch {} },
+  };
+  let session = store.get('webscan_session');
+  let who = null, tools = [], current = null, meta = {}, loginWaiters = [];
+
+  class ApiError extends Error { constructor(msg, status) { super(msg); this.status = status; } }
+
+  async function api(path, opts = {}, retried = false) {
+    const headers = { 'Content-Type': 'application/json', ...(session ? { Authorization: 'Session ' + session } : {}), ...(opts.headers || {}) };
+    const res = await fetch(path, { method: opts.method || 'GET', body: opts.body, headers });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && meta.authRequired && !retried && !opts.noLogin) {
+      session = null; store.set('webscan_session', null);
+      await requireLogin(data.error);
+      return api(path, opts, true);
+    }
+    if (!res.ok) {
+      let msg = data.error || res.statusText;
+      if (data.attemptsLeft !== undefined) msg += ` — ${data.attemptsLeft} attempt(s) left before lockout`;
+      const ra = res.headers.get('Retry-After');
+      if (res.status === 429 && ra && !/retry|min/i.test(msg)) msg += ` (retry in ${ra}s)`;
+      throw new ApiError(msg, res.status);
+    }
+    return data;
+  }
+
+  // ---------- sign-in ----------
+  function requireLogin(msg) {
+    $('#login').classList.remove('hidden');
+    $('#loginErr').textContent = msg && !/required/i.test(msg) ? msg : '';
+    setTimeout(() => $('#apiKey').focus(), 0);
+    return new Promise(r => loginWaiters.push(r));
+  }
+  $('#loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('#loginBtn').disabled = true; $('#loginErr').textContent = '';
+    try {
+      const r = await api('/api/session', { method: 'POST', body: JSON.stringify({ apiKey: $('#apiKey').value.trim() }), noLogin: true });
+      session = r.token; store.set('webscan_session', session);
+      $('#apiKey').value = '';
+      $('#login').classList.add('hidden');
+      const w = loginWaiters; loginWaiters = []; w.forEach(f => f());
+    } catch (err) {
+      $('#loginErr').textContent = err.message;
+    } finally { $('#loginBtn').disabled = false; }
+  });
+  $('#logout').addEventListener('click', () => { session = null; store.set('webscan_session', null); location.reload(); });
+
+  const can = (scope) => !!who && (who.scopes.includes(scope) || who.scopes.includes('admin'));
+
+  async function loadWho() {
+    who = await api('/api/whoami');
+    const chip = $('#userChip');
+    chip.classList.toggle('hidden', who.method === 'open');
+    $('#userName').textContent = who.name;
+    $('#userScopes').innerHTML = who.scopes.map(s => `<span class="scope">${esc(s)}</span>`).join(' ');
+    renderLimits();
+    applyPermissions();
+  }
+
+  function applyPermissions() {
+    const box = $('#authBox');
+    if (!meta.allowActive) box.innerHTML = '<span class="muted">Active tools are disabled on this server (ALLOW_ACTIVE=0).</span>';
+    else if (!can('active')) box.innerHTML = '<span class="muted">Your API key can run passive checks only. Active tools need a key with the <b>active</b> scope.</span>';
+    const go = $('#go');
+    if (!can('scan')) { go.disabled = true; go.title = 'Your API key has no "scan" scope (read-only)'; }
+  }
+
+  function renderLimits() {
+    const l = meta.limits || {};
+    $('#limits').innerHTML = [
+      `<b>${l.apiPerMin}</b> API requests / min per IP`,
+      `<b>${l.scansPerHour}</b> scans / hour per key${who && who.scansRemainingThisHour !== undefined ? ` — <span class="ok">${who.scansRemainingThisHour} left</span>` : ''}`,
+      `<b>${l.maxScans}</b> concurrent scans (${l.maxScansPerClient} per key)`,
+      `Lockout after <b>${l.lockoutFailures}</b> failed sign-ins (${l.lockoutMinutes} min)`,
+      `Target throttle: <b>${meta.rps}</b> req/s built-in · <b>${meta.toolRps}</b> req/s tools`,
+    ].join('<br>');
+  }
+
+  async function init() {
+    meta = await api('/api/meta');
+    $('#ver').textContent = 'v' + meta.version;
+    $('#keyFp').textContent = meta.reportKeyFingerprint || '';
+    $('#modules').innerHTML = meta.modules.map(m => `<label class="chk"><input type="checkbox" class="mod" value="${m}" checked> ${({ tls: 'SSL/TLS', headers: 'Security headers & cookies', exposure: 'Exposed files', cms: 'CMS & JS libraries', health: 'Health & performance', dns: 'DNS & email' })[m] || m}</label>`).join('');
+    if (meta.authRequired && !session) await requireLogin();
+    await loadWho();
+    tools = await api('/api/tools');
+    $('#toolCount').textContent = `${tools.filter(t => t.installed).length}/${tools.length} tools installed`;
+    renderTools();
+    loadHistory();
+  }
+
+  function renderTools() {
+    const show = $('#showMissing').checked;
+    const prev = new Set([...document.querySelectorAll('.toolchk:checked')].map(i => i.value));
+    const cats = [...new Set(tools.map(t => t.category))];
+    $('#tools').innerHTML = cats.map(c => {
+      const list = tools.filter(t => t.category === c && (show || t.installed));
+      if (!list.length) return '';
+      return `<div class="cat">${esc(c)}</div><div class="tools-grid">` + list.map(t => `
+        <label class="tool ${t.installed ? 'installed' : 'missing'}" title="${esc(t.installed ? t.path : 'Install: ' + t.install)}">
+          <input type="checkbox" class="toolchk" value="${esc(t.id)}" ${t.installed ? '' : 'disabled'} ${prev.has(t.id) ? 'checked' : ''}>
+          <span class="dot"></span>${esc(t.name)}
+          <span class="tag ${t.intrusive ? 'active' : ''}">${t.intrusive ? 'active' : 'passive'}</span>
+        </label>`).join('') + '</div>';
+    }).join('') || '<div class="muted" style="margin-top:6px">No external tools installed on this server. Tick “show not installed” to see install commands, or run scripts/install-tools.sh.</div>';
+  }
+  $('#showMissing').addEventListener('change', renderTools);
+  document.querySelectorAll('[data-sel]').forEach(b => b.addEventListener('click', () => {
+    const mode = b.dataset.sel;
+    document.querySelectorAll('.toolchk').forEach(i => {
+      const t = tools.find(x => x.id === i.value);
+      i.checked = !i.disabled && (mode === 'all' || (mode === 'passive' && !t.intrusive));
+    });
+  }));
+
+  // ---------- scanning ----------
+  $('#form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = {
+      url: $('#url').value.trim(),
+      modules: [...document.querySelectorAll('.mod:checked')].map(i => i.value),
+      tools: [...document.querySelectorAll('.toolchk:checked')].map(i => i.value),
+      authorized: !!$('#authorized')?.checked,
+      links: $('#links').checked,
+      maxLinks: Number($('#maxLinks').value) || 60,
+    };
+    const activeSel = body.tools.filter(id => tools.find(t => t.id === id)?.intrusive);
+    if (activeSel.length && !body.authorized && !confirm(`${activeSel.length} active tool(s) selected but authorization is not ticked — they will be skipped. Continue?`)) return;
+    $('#go').disabled = true; $('#go').textContent = 'Scanning…';
+    $('#log').textContent = ''; $('#stage').textContent = '';
+    $('#progressCard').classList.remove('hidden');
+    try {
+      const { id } = await api('/api/scan', { method: 'POST', body: JSON.stringify(body) });
+      stream(id);
+    } catch (err) {
+      logLine('✖ ' + err.message, true); done();
+    }
+  });
+
+  function logLine(s, isErr) {
+    const el = $('#log');
+    const div = document.createElement('div');
+    if (isErr) div.className = 'err';
+    div.textContent = s;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  }
+  function done() { $('#go').disabled = !can('scan'); $('#go').textContent = 'Scan'; loadWho().catch(() => {}); }
+
+  // EventSource can't send auth headers, so each connection uses a one-time 60 s ticket.
+  // The server replays the full event history on connect, so a reconnect just redraws the log.
+  function stream(id) {
+    let finished = false, attempts = 0;
+    const connect = async () => {
+      let url = `/api/scan/${id}/events`;
+      try {
+        if (meta.authRequired) {
+          const t = await api(`/api/scan/${id}/ticket`, { method: 'POST' });
+          url += '?ticket=' + encodeURIComponent(t.ticket);
+        }
+      } catch (err) { logLine('✖ ' + err.message, true); done(); return; }
+      $('#log').textContent = '';
+      const es = new EventSource(url);
+      es.addEventListener('log', e => logLine(JSON.parse(e.data)));
+      es.addEventListener('stage', e => $('#stage').textContent = '— ' + JSON.parse(e.data));
+      es.addEventListener('done', async () => {
+        finished = true; es.close();
+        try {
+          const r = await api(`/api/scan/${id}`);
+          $('#stage').textContent = '— complete';
+          showReport(r.report); loadHistory();
+        } catch (err) { logLine('✖ ' + err.message, true); }
+        done();
+      });
+      es.addEventListener('failed', e => {
+        finished = true; es.close();
+        logLine('✖ ' + JSON.parse(e.data), true); $('#stage').textContent = '— failed'; done();
+      });
+      es.onerror = () => {
+        es.close();
+        if (finished) return;
+        if (attempts++ < 5) { $('#stage').textContent = '— reconnecting…'; setTimeout(connect, 2000); }
+        else { logLine('✖ Lost connection to the server. The scan may still finish — check History.', true); done(); }
+      };
+    };
+    connect();
+  }
+
+  // ---------- report view ----------
+  function showReport(r) {
+    current = r;
+    $('#results').classList.remove('hidden');
+    $('#rUrl').textContent = r.target.finalUrl;
+    $('#rMeta').textContent = `· ${new Date(r.scannedAt).toLocaleString()} · ${(r.durationMs / 1000).toFixed(1)}s${r.options?.requestedBy ? ' · by ' + r.options.requestedBy : ''}`;
+    $('#sigBadge').innerHTML = r.integrity
+      ? `<span class="badge good" title="SHA-256 ${esc(r.integrity.hash)}">🔒 Signed · ${esc(r.integrity.hash.slice(0, 12))}…</span>`
+      : '<span class="badge">Unsigned</span>';
+    $('#verifyCur').classList.toggle('hidden', !r.integrity);
+    $('#verifyCurOut').innerHTML = '';
+    const col = (n) => n >= 90 ? 'var(--pass)' : n >= 70 ? 'var(--warn)' : 'var(--fail)';
+    $('#sOverall').textContent = r.score.overall; $('#sOverall').style.color = col(r.score.overall);
+    $('#sGrade').textContent = r.score.grade; $('#sGrade').className = 'grade-' + r.score.grade;
+    $('#sSec').textContent = r.score.security; $('#bSec').style.cssText = `width:${r.score.security}%;background:${col(r.score.security)}`;
+    $('#sHealth').textContent = r.score.health; $('#bHealth').style.cssText = `width:${r.score.health}%;background:${col(r.score.health)}`;
+    const s = r.summary;
+    $('#counts').innerHTML = ['critical', 'high', 'medium', 'low'].map(k => `<span class="pill s-${k}">${s[k] || 0} ${k}</span>`).join('') + `<span class="pill" style="color:var(--pass)">${s.pass} passed</span>`;
+    $('#tech').innerHTML = r.technologies.length ? 'Detected: ' + r.technologies.map(t => `<span class="pill" style="font-weight:400;padding:2px 8px;font-size:12px">${esc(t)}</span>`).join(' ') : '';
+    const cats = [...new Set(r.findings.map(f => f.category))].sort();
+    $('#fCat').innerHTML = '<option value="">All categories</option>' + cats.map(c => `<option>${esc(c)}</option>`).join('');
+    renderFindings();
+
+    $('#toolsCard').classList.toggle('hidden', !r.tools.length);
+    $('#toolResults').innerHTML = r.tools.map(t => {
+      const st = { ok: 'pass', timeout: 'warn', error: 'fail', skipped: 'info', not_installed: 'info' }[t.status];
+      return `<details class="toolres"><summary><span class="st st-${st}">${esc(t.status.replace('_', ' '))}</span> <b>${esc(t.name)}</b> <span class="muted">· ${esc(t.category)}${t.durationMs ? ' · ' + (t.durationMs / 1000).toFixed(1) + 's' : ''} — ${esc(t.summary || t.reason || t.error || t.install || '')}</span></summary>
+        ${t.command ? `<div class="muted" style="margin-top:6px;font:12px var(--mono)">$ ${esc(t.command)}</div>` : ''}
+        ${t.items?.length ? `<pre>${esc(t.items.slice(0, 300).join('\n'))}${t.items.length > 300 ? '\n…' : ''}</pre>` : ''}
+        ${t.raw ? `<details style="margin-top:6px"><summary>Raw output</summary><pre>${esc(t.raw)}</pre></details>` : ''}
+      </details>`;
+    }).join('');
+
+    const o = r.osint || {};
+    $('#osintCard').classList.toggle('hidden', !(o.subdomains?.length || o.emails?.length));
+    $('#osint').innerHTML = (o.subdomains?.length ? `<div class="cat">Subdomains (${o.subdomains.length})</div><div class="chips">${o.subdomains.map(s => `<span>${esc(s)}</span>`).join('')}</div>` : '') +
+      (o.emails?.length ? `<div class="cat">Emails (${o.emails.length})</div><div class="chips">${o.emails.map(s => `<span>${esc(s)}</span>`).join('')}</div>` : '');
+    $('#raw').textContent = JSON.stringify(r, null, 2);
+  }
+
+  function renderFindings() {
+    if (!current) return;
+    const st = $('#fStatus').value, sev = $('#fSev').value, cat = $('#fCat').value, q = $('#fText').value.toLowerCase();
+    const rows = current.findings.filter(f =>
+      (st === 'issues' ? ['fail', 'warn'].includes(f.status) : !st || f.status === st) &&
+      (!sev || f.severity === sev) && (!cat || f.category === cat) &&
+      (!q || JSON.stringify(f).toLowerCase().includes(q)));
+    $('#fBody').innerHTML = rows.map(f => `<tr>
+      <td><span class="st st-${esc(f.status)}">${esc(f.status.toUpperCase())}</span></td>
+      <td class="s-${esc(f.severity)}">${f.status === 'pass' ? '' : esc(f.severity)}</td>
+      <td><b>${esc(f.title)}</b><div class="muted" style="font-size:12px">${esc(f.category)}</div></td>
+      <td class="detail">${esc(f.detail)}${f.evidence ? `<pre>${esc(f.evidence)}</pre>` : ''}${f.fix && f.status !== 'pass' ? `<div class="fix">${esc(f.fix)}</div>` : ''}</td>
+    </tr>`).join('') || `<tr><td colspan="4" class="muted">No findings match the filter${st === 'issues' ? ' — no issues found 🎉' : ''}.</td></tr>`;
+  }
+  ['#fStatus', '#fSev', '#fCat'].forEach(s => $(s).addEventListener('change', renderFindings));
+  $('#fText').addEventListener('input', renderFindings);
+
+  // ---------- integrity ----------
+  function renderVerify(r) {
+    return `<span class="badge ${r.valid ? 'good' : 'bad'}">${r.valid ? '✔ VALID' : '✖ INVALID'}</span> ${esc(r.reason)}` +
+      (r.signed ? `<div class="muted" style="margin-top:4px">hash ${r.hashMatches ? 'matches' : '<b class="err">MISMATCH</b>'} · signature ${r.signatureValid ? 'valid' : '<b class="err">invalid</b>'} · signed ${esc(r.signedAt ? new Date(r.signedAt).toLocaleString() : '?')}<br>by <code class="fp">${esc(r.signedBy)}</code>${r.keyMatchesServer === false ? ' <span class="err">(not this server\'s key)</span>' : ''}</div>` : '');
+  }
+  $('#verifyCur').addEventListener('click', async () => {
+    if (!current) return;
+    $('#verifyCurOut').textContent = 'Verifying…';
+    try { $('#verifyCurOut').innerHTML = renderVerify(await api('/api/verify', { method: 'POST', body: JSON.stringify(current) })); }
+    catch (err) { $('#verifyCurOut').innerHTML = `<span class="err">${esc(err.message)}</span>`; }
+  });
+  $('#verifyFile').addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const out = $('#verifyFileOut');
+    out.textContent = 'Verifying…';
+    try {
+      const text = await f.text();
+      try { JSON.parse(text); } catch { throw new Error('Not a valid JSON file'); }
+      out.innerHTML = `<div class="muted">${esc(f.name)}</div>` + renderVerify(await api('/api/verify', { method: 'POST', body: text }));
+    } catch (err) { out.innerHTML = `<span class="err">${esc(err.message)}</span>`; }
+    e.target.value = '';
+  });
+
+  $('#dlJson').addEventListener('click', () => {
+    if (!current) return;
+    const blob = new Blob([JSON.stringify(current, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${current.target.host}-${current.scannedAt.slice(0, 10)}.json`;
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+  $('#copyJson').addEventListener('click', async () => {
+    if (!current) return;
+    await navigator.clipboard.writeText(JSON.stringify(current, null, 2)).catch(() => {});
+    $('#copyJson').textContent = 'Copied ✓'; setTimeout(() => $('#copyJson').textContent = 'Copy JSON', 1500);
+  });
+
+  // ---------- history ----------
+  async function loadHistory() {
+    try {
+      const list = await api('/api/reports');
+      const admin = can('admin');
+      $('#history').innerHTML = list.map(r => `<div>${admin ? `<button class="del" data-del="${esc(r.file)}" title="Delete report">✕</button>` : ''}<a href="#" data-f="${esc(r.file)}"><span class="u">${r.signed ? '🔒 ' : ''}${esc(r.url || r.file)}</span>
+        <span class="m"><b class="grade-${esc(r.grade)}">${esc(r.grade || '?')} ${esc(r.score ?? '')}</b> · ${esc(r.scannedAt ? new Date(r.scannedAt).toLocaleString() : '')}${r.requestedBy ? ' · ' + esc(r.requestedBy.replace(/ \([0-9a-f]{8}\)$/, '')) : ''}</span></a></div>`).join('') || '<div class="muted">No scans yet.</div>';
+      document.querySelectorAll('#history a').forEach(a => a.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try { showReport(await api('/api/reports/' + encodeURIComponent(a.dataset.f))); $('#results').scrollIntoView({ behavior: 'smooth' }); }
+        catch (err) { alert(err.message); }
+      }));
+      document.querySelectorAll('#history .del').forEach(b => b.addEventListener('click', async () => {
+        if (!confirm(`Delete ${b.dataset.del}?`)) return;
+        try { await api('/api/reports/' + encodeURIComponent(b.dataset.del), { method: 'DELETE' }); loadHistory(); }
+        catch (err) { alert(err.message); }
+      }));
+    } catch (e) { $('#history').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  }
+  $('#refreshHist').addEventListener('click', loadHistory);
+
+  init().catch(e => alert('Failed to load: ' + e.message));
+})();
+</script>
+</body>
+</html>
